@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Minecraft My Way - Mod for Mincraft
 //    by Jonathan "Wyrd" Brazell
-//    Version: 0.4
+//    Version: 0.5
 //    Minecraft Version: 1.4.2
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -21,6 +21,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////VERSION HISTORY///////////////////////////////
+// 0.5 - Now kills any existing creatures of type not allowed to spawn.
+//      * Added option to kill Blazes
+//      * Added option to kill Cave Spiders
+//      * Added option to kill Dragon
+//      * Added option to kill Giant Zombies
+//      * Added option to kill Iron Golems
+//      * Added option to kill Silverfish
+//      * Added option to kill Snowman
+//      * Added option to kill Witch
+//      * Added option to kill Wither
 // 0.4 - Added World Gen option for Caves
 //      * Added World Gen option for Strongholds
 //      * Added World Gen option for Villages

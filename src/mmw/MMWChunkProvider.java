@@ -37,7 +37,7 @@ public class MMWChunkProvider extends ChunkProviderGenerate {
         worldObj = par1World;
         mapFeaturesEnabled = par4;
         rand = new Random(par2);
-        mod_MyWay.processWorldGen();
+        mod_MyWay.processWorldGen(); // Make sure gen options are set.
     }
 
     /**

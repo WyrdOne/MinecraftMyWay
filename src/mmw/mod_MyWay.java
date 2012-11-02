@@ -9,7 +9,7 @@ import moapi.*;
 public class mod_MyWay extends BaseMod {
   // Copyright/license info
   private static final String Name = "Minecraft My Way";
-  private static final String Version = "0.4 (For use with Minecraft 1.4.2)";
+  private static final String Version = "0.5 (For use with Minecraft 1.4.2)";
 	private static final String Copyright = "All original code and images (C) 2011-2012, Jonathan \"Wyrd\" Brazell";
 	private static final String License = "This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.";
   // Options
@@ -76,14 +76,13 @@ public class mod_MyWay extends BaseMod {
 	}
 
   public boolean onTickInGame(float f, Minecraft paramMinecraft) {
-    // Don't need to check the options every tick.
+    processSpawns();
+    // Don't need to check other options every tick.
     tickCounter++;
     if ((tickCounter & 0x001f)!=0x0001)
       return true;
-    processWorldGen();
     processSpecial();
     processRecipes();
-    processSpawns();
     return true;
   }
 
@@ -232,23 +231,32 @@ public class mod_MyWay extends BaseMod {
   
   public static void processSpawns() {
     boolean allowHostile = optionsHostileSpawns.getToggleValue("Allow Hostile Spawns");
-    boolean allowPeaceful = optionsPeacefulSpawns.getToggleValue("Allow Peaceful Spawns"); 
+    boolean allowBlaze = optionsHostileSpawns.getToggleValue("Blaze") && allowHostile;  
+    boolean allowCaveSpider = optionsHostileSpawns.getToggleValue("Cave Spider") && allowHostile;  
     boolean allowCreeper = optionsHostileSpawns.getToggleValue("Creeper") && allowHostile;  
+    boolean allowDragon = optionsHostileSpawns.getToggleValue("Dragon") && allowHostile;  
     boolean allowEnderman = optionsHostileSpawns.getToggleValue("Enderman") && allowHostile;  
     boolean allowGhast = optionsHostileSpawns.getToggleValue("Ghast") && allowHostile;  
+    boolean allowGiantZombie = optionsHostileSpawns.getToggleValue("Giant Zombie") && allowHostile;  
     boolean allowMagmaCube = optionsHostileSpawns.getToggleValue("Magma Cube") && allowHostile;  
     boolean allowPigZombie = optionsHostileSpawns.getToggleValue("Pig Zombie") && allowHostile;  
+    boolean allowSilverfish = optionsHostileSpawns.getToggleValue("Silverfish") && allowHostile;  
     boolean allowSkeleton = optionsHostileSpawns.getToggleValue("Skeleton") && allowHostile;  
     boolean allowSlime = optionsHostileSpawns.getToggleValue("Slime") && allowHostile;  
     boolean allowSpider = optionsHostileSpawns.getToggleValue("Spider") && allowHostile;  
+    boolean allowWitch = optionsHostileSpawns.getToggleValue("Witch") && allowHostile;  
+    boolean allowWither = optionsHostileSpawns.getToggleValue("Wither") && allowHostile;  
     boolean allowZombie = optionsHostileSpawns.getToggleValue("Zombie") && allowHostile;  
+    boolean allowPeaceful = optionsPeacefulSpawns.getToggleValue("Allow Peaceful Spawns"); 
     boolean allowBats = optionsPeacefulSpawns.getToggleValue("Bats") && allowPeaceful; 
     boolean allowChicken = optionsPeacefulSpawns.getToggleValue("Chicken") && allowPeaceful; 
     boolean allowCow = optionsPeacefulSpawns.getToggleValue("Cow") && allowPeaceful; 
+    boolean allowIronGolem = optionsPeacefulSpawns.getToggleValue("Iron Golem") && allowPeaceful; 
     boolean allowMooshroom = optionsPeacefulSpawns.getToggleValue("Mooshroom") && allowPeaceful; 
     boolean allowOcelot = optionsPeacefulSpawns.getToggleValue("Ocelot/Cat") && allowPeaceful; 
     boolean allowPig = optionsPeacefulSpawns.getToggleValue("Pig") && allowPeaceful; 
     boolean allowSheep = optionsPeacefulSpawns.getToggleValue("Sheep") && allowPeaceful; 
+    boolean allowSnowman = optionsPeacefulSpawns.getToggleValue("Snowman") && allowPeaceful; 
     boolean allowWolf = optionsPeacefulSpawns.getToggleValue("Wolf") && allowPeaceful; 
     boolean allowSquid = optionsPeacefulSpawns.getToggleValue("Squid") && allowPeaceful; 
     boolean allowNPCs = optionsPeacefulSpawns.getToggleValue("NPCs") && allowPeaceful;
@@ -256,14 +264,21 @@ public class mod_MyWay extends BaseMod {
     // Hostile & Peaceful Spawn overrides
     mc.theWorld.setAllowedSpawnTypes(allowHostile, allowPeaceful);
     if (!allowHostile) {
+      killAll(EntityBlaze.class, EnumCreatureType.monster);
+      killAll(EntityCaveSpider.class, EnumCreatureType.monster);
       killAll(EntityCreeper.class, EnumCreatureType.monster);
+      killAll(EntityDragon.class, EnumCreatureType.monster);
       killAll(EntityEnderman.class, EnumCreatureType.monster);
       killAll(EntityGhast.class, EnumCreatureType.monster);
+      killAll(EntityGiantZombie.class, EnumCreatureType.monster);
       killAll(EntityMagmaCube.class, EnumCreatureType.monster);
       killAll(EntityPigZombie.class, EnumCreatureType.monster);
+      killAll(EntitySilverfish.class, EnumCreatureType.monster);
       killAll(EntitySkeleton.class, EnumCreatureType.monster);
       killAll(EntitySlime.class, EnumCreatureType.monster);
       killAll(EntitySpider.class, EnumCreatureType.monster);
+      killAll(EntityWitch.class, EnumCreatureType.monster);
+      killAll(EntityWither.class, EnumCreatureType.monster);
       killAll(EntityZombie.class, EnumCreatureType.monster);
     }    
     if (!allowPeaceful) {
@@ -271,10 +286,12 @@ public class mod_MyWay extends BaseMod {
       killAll(EntityBat.class, EnumCreatureType.ambient);
       killAll(EntityChicken.class, EnumCreatureType.creature);
       killAll(EntityCow.class, EnumCreatureType.creature);
+      killAll(EntityIronGolem.class, EnumCreatureType.creature);
       killAll(EntityMooshroom.class, EnumCreatureType.creature);
       killAll(EntityOcelot.class, EnumCreatureType.creature);
       killAll(EntityPig.class, EnumCreatureType.creature);
       killAll(EntitySheep.class, EnumCreatureType.creature);
+      killAll(EntitySnowman.class, EnumCreatureType.creature);
       killAll(EntityWolf.class, EnumCreatureType.creature);
       killAll(EntitySquid.class, EnumCreatureType.waterCreature);
     }
@@ -302,6 +319,9 @@ public class mod_MyWay extends BaseMod {
       } else {
         killAll(EntityCow.class, EnumCreatureType.creature);
       }
+      if (!allowIronGolem) {
+        killAll(EntityIronGolem.class, EnumCreatureType.creature);
+      }
       if (allowMooshroom) {
         ModLoader.addSpawn(EntityMooshroom.class, 8, 4, 8, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.mushroomIsland});
       } else {
@@ -322,6 +342,9 @@ public class mod_MyWay extends BaseMod {
       } else {
         killAll(EntitySheep.class, EnumCreatureType.creature);
       }
+      if (!allowSnowman) {
+        killAll(EntitySnowman.class, EnumCreatureType.creature);
+      }
       if (allowWolf) {
         ModLoader.addSpawn(EntityWolf.class, 5, 4, 4, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.forest});
         ModLoader.addSpawn(EntityWolf.class, 8, 4, 4, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.taiga});
@@ -335,10 +358,19 @@ public class mod_MyWay extends BaseMod {
       }
     }
     if (allowHostile) {
+      if (!allowBlaze) {
+        killAll(EntityBlaze.class, EnumCreatureType.monster);
+      }
+      if (!allowCaveSpider) {
+        killAll(EntityCaveSpider.class, EnumCreatureType.monster);
+      }
       if (allowCreeper) {
         ModLoader.addSpawn(EntityCreeper.class, 10, 4, 4, EnumCreatureType.monster);
       } else {
         killAll(EntityCreeper.class, EnumCreatureType.monster);
+      }
+      if (!allowDragon) {
+        killAll(EntityDragon.class, EnumCreatureType.monster);
       }
       if (allowEnderman) {
         ModLoader.addSpawn(EntityEnderman.class, 1, 1, 4, EnumCreatureType.monster);
@@ -350,6 +382,9 @@ public class mod_MyWay extends BaseMod {
       } else {
         killAll(EntityGhast.class, EnumCreatureType.monster);
       }
+      if (!allowGiantZombie) {
+        killAll(EntityGiantZombie.class, EnumCreatureType.monster);
+      }
       if (allowMagmaCube) {
         ModLoader.addSpawn(EntityMagmaCube.class, 1, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
       } else {
@@ -359,6 +394,9 @@ public class mod_MyWay extends BaseMod {
         ModLoader.addSpawn(EntityPigZombie.class, 100, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
       } else {
         killAll(EntityPigZombie.class, EnumCreatureType.monster);
+      }
+      if (!allowSilverfish) {
+        killAll(EntitySilverfish.class, EnumCreatureType.monster);
       }
       if (allowSkeleton) {
         ModLoader.addSpawn(EntitySkeleton.class, 10, 4, 4, EnumCreatureType.monster);
@@ -374,6 +412,12 @@ public class mod_MyWay extends BaseMod {
         ModLoader.addSpawn(EntitySpider.class, 10, 4, 4, EnumCreatureType.monster);
       } else {
         killAll(EntitySpider.class, EnumCreatureType.monster);
+      }
+      if (!allowWitch) {
+        killAll(EntityWitch.class, EnumCreatureType.monster);
+      }
+      if (!allowWither) {
+        killAll(EntityWither.class, EnumCreatureType.monster);
       }
       if (allowZombie) {
         ModLoader.addSpawn(EntityZombie.class, 10, 4, 4, EnumCreatureType.monster);
@@ -426,23 +470,32 @@ public class mod_MyWay extends BaseMod {
     optionsMain.addSubOptions(optionsWorldGen);
     // Add options to Hostile Spawn screen
 	  optionsHostileSpawns.addToggle("Zombie").setValue(true);
+	  optionsHostileSpawns.addToggle("Wither").setValue(true);
+	  optionsHostileSpawns.addToggle("Witch").setValue(true);
 	  optionsHostileSpawns.addToggle("Spider").setValue(true);
 	  optionsHostileSpawns.addToggle("Slime").setValue(true);
 	  optionsHostileSpawns.addToggle("Skeleton").setValue(true);
+	  optionsHostileSpawns.addToggle("Silverfish").setValue(true);
 	  optionsHostileSpawns.addToggle("Pig Zombie").setValue(true);
 	  optionsHostileSpawns.addToggle("Magma Cube").setValue(true);
+	  optionsHostileSpawns.addToggle("Giant Zombie").setValue(true);
 	  optionsHostileSpawns.addToggle("Ghast").setValue(true);
 	  optionsHostileSpawns.addToggle("Enderman").setValue(true);
+	  optionsHostileSpawns.addToggle("Dragon").setValue(true);
 	  optionsHostileSpawns.addToggle("Creeper").setValue(true);
+	  optionsHostileSpawns.addToggle("Cave Spider").setValue(true);
+	  optionsHostileSpawns.addToggle("Blaze").setValue(true);
 	  optionsHostileSpawns.addToggle("Allow Hostile Spawns").setValue(true);
     // Add options to Peaceful Spawn screen
 	  optionsPeacefulSpawns.addToggle("Wolf").setValue(true);
 	  optionsPeacefulSpawns.addToggle("Squid").setValue(true);
+	  optionsPeacefulSpawns.addToggle("Snowman").setValue(true);
 	  optionsPeacefulSpawns.addToggle("Sheep").setValue(true);
 	  optionsPeacefulSpawns.addToggle("Pig").setValue(true);
 	  optionsPeacefulSpawns.addToggle("Ocelot/Cat").setValue(true);
 	  optionsPeacefulSpawns.addToggle("NPCs").setValue(true);
 	  optionsPeacefulSpawns.addToggle("Mooshroom").setValue(true);
+	  optionsPeacefulSpawns.addToggle("Iron Golem").setValue(true);
 	  optionsPeacefulSpawns.addToggle("Cow").setValue(true);
 	  optionsPeacefulSpawns.addToggle("Chicken").setValue(true);
 	  optionsPeacefulSpawns.addToggle("Bats").setValue(true);
