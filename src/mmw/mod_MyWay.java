@@ -1,23 +1,24 @@
 package net.minecraft.src;
 
 import java.util.Iterator;
+import java.lang.reflect.*;
+import java.io.PrintWriter;
 import net.minecraft.client.Minecraft;
 import moapi.*;
-import java.io.PrintWriter;
 
 public class mod_MyWay extends BaseMod {
   // Copyright/license info
   private static final String Name = "Minecraft My Way";
-  private static final String Version = "0.3 (For use with Minecraft 1.4.2)";
+  private static final String Version = "0.4 (For use with Minecraft 1.4.2)";
 	private static final String Copyright = "All original code and images (C) 2011-2012, Jonathan \"Wyrd\" Brazell";
 	private static final String License = "This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.";
-  private static final String ModLoaderVersion = "ModLoader 1.4.2";
   // Options
   private static ModOptions optionsMain;
   private static ModOptions optionsHostileSpawns;
   private static ModOptions optionsPeacefulSpawns;
   private static ModOptions optionsRecipes;
   private static ModOptions optionsSpecial;
+  private static ModOptions optionsWorldGen;
   // Save states
 	private static boolean removeDiamondTools = false;
 	private static boolean removeDiamondArmor = false;
@@ -27,19 +28,27 @@ public class mod_MyWay extends BaseMod {
 	private static boolean craftFlint = false;
 	private static boolean craftCobblestone = false;
 	private static boolean flintTools = false;
+  // World Generation Options
+  public static boolean genCaves = true;
+  public static boolean genStrongholds = true;
+  public static boolean genVillages = true;
+  public static boolean genMineshafts = true;
+  public static boolean genScatteredFeatures = true;
+  public static boolean genRavines = true;
   // Other variables
+  public static boolean isObfuscated;
+  private static MMWWorldType mmwWorldType = new MMWWorldType();
   private static Minecraft mc = ModLoader.getMinecraftInstance();
   private static Block saveStone = Block.stone;
   private static Block mmwStone;
+  private static Block saveSand = Block.sand;
+  private static Block mmwSand;
+  private static Block saveGravel = Block.gravel;
+  private static Block mmwGravel;
   private static Item saveItemDye = Item.dyePowder;
   private static int tickCounter = 0;
       	
   public void load() {
-    // Check proper version of ModLoader to stop version mismatch errors
-    if (ModLoader.VERSION != ModLoaderVersion) {
-      System.out.println("MinecraftMyWay/ModLoader version mismatch.");
-      return;
-    }
     // Set up options menu for mod options
     initModOptionsAPI();
 
@@ -47,6 +56,16 @@ public class mod_MyWay extends BaseMod {
     Block.blocksList[Block.stone.blockID] = null;
     mmwStone = (new MMWBlockStone(1, 1)).setHardness(1.5F).setResistance(10.0F).setStepSound(Block.soundStoneFootstep).setBlockName("stone");
     ModLoader.registerBlock(mmwStone);
+
+    // Replace Sand
+    Block.blocksList[Block.sand.blockID] = null;
+    mmwSand = (new MMWBlockSand(12, 18)).setHardness(0.5F).setStepSound(Block.soundSandFootstep).setBlockName("sand");
+    ModLoader.registerBlock(mmwSand);
+
+    // Replace Gravel
+    Block.blocksList[Block.gravel.blockID] = null;
+    mmwGravel = (new MMWBlockGravel(13, 19)).setHardness(0.6F).setStepSound(Block.soundGravelFootstep).setBlockName("gravel");
+    ModLoader.registerBlock(mmwGravel);
 
     // Replace dye to allow bonemeal to be disabled.
     Item.itemsList[Item.dyePowder.shiftedIndex] = null;
@@ -61,14 +80,34 @@ public class mod_MyWay extends BaseMod {
     tickCounter++;
     if ((tickCounter & 0x001f)!=0x0001)
       return true;
-      
+    processWorldGen();
+    processSpecial();
+    processRecipes();
+    processSpawns();
+    return true;
+  }
+
+  public static void processWorldGen() {
+    // World Gen Options
+    genCaves = optionsWorldGen.getToggleValue("Caves");
+    genMineshafts = optionsWorldGen.getToggleValue("Mineshafts");
+    genRavines = optionsWorldGen.getToggleValue("Ravines");
+    genScatteredFeatures = optionsWorldGen.getToggleValue("Scattered Features");
+    genStrongholds = optionsWorldGen.getToggleValue("Strongholds");
+    genVillages = optionsWorldGen.getToggleValue("Villages");
+  }
+
+  public static void processSpecial() {
     // Bonemeal
     ((MMWItemDye)Item.dyePowder).disableBonemeal = !optionsSpecial.getToggleValue("Bonemeal Instagrowth");
     // Gravel/Sand
-    ((BlockSand)Block.sand).gravityWorks = optionsSpecial.getToggleValue("Gravel/Sand Gravity"); 
+    ((MMWBlockSand)mmwSand).gravityWorks = optionsSpecial.getToggleValue("Gravel/Sand Gravity"); 
+    ((MMWBlockGravel)mmwGravel).gravityWorks = optionsSpecial.getToggleValue("Gravel/Sand Gravity"); 
     // Stone
     ((MMWBlockStone)Block.blocksList[Block.stone.blockID]).drop = optionsSpecial.getToggleValue("Stone Drops Gravel") ? Block.gravel.blockID : Block.cobblestone.blockID;
-   
+  }
+
+  public static void processRecipes() {
     // Diamond Tools
     if (!optionsRecipes.getToggleValue("Diamond Tools")) {
       if (!removeDiamondTools) {
@@ -97,6 +136,7 @@ public class mod_MyWay extends BaseMod {
         removeRecipe(Item.bootsDiamond.shiftedIndex); 
       }
     } else if (removeDiamondArmor) {
+
       removeDiamondArmor = false;
       ModLoader.addRecipe(new ItemStack(Item.helmetDiamond, 1), new Object[] {"DDD", "D D", 'D', Item.diamond}); 
       ModLoader.addRecipe(new ItemStack(Item.plateDiamond, 1), new Object[] {"D D", "DDD", "DDD", 'D', Item.diamond}); 
@@ -188,123 +228,172 @@ public class mod_MyWay extends BaseMod {
         ModLoader.addRecipe(new ItemStack(Item.hoeStone, 1), new Object[] {"CC", " S", " S", 'C', Block.cobblestone, 'S', Item.stick}); 
       }
     }
+  }  
+  
+  public static void processSpawns() {
+    boolean allowHostile = optionsHostileSpawns.getToggleValue("Allow Hostile Spawns");
+    boolean allowPeaceful = optionsPeacefulSpawns.getToggleValue("Allow Peaceful Spawns"); 
+    boolean allowCreeper = optionsHostileSpawns.getToggleValue("Creeper") && allowHostile;  
+    boolean allowEnderman = optionsHostileSpawns.getToggleValue("Enderman") && allowHostile;  
+    boolean allowGhast = optionsHostileSpawns.getToggleValue("Ghast") && allowHostile;  
+    boolean allowMagmaCube = optionsHostileSpawns.getToggleValue("Magma Cube") && allowHostile;  
+    boolean allowPigZombie = optionsHostileSpawns.getToggleValue("Pig Zombie") && allowHostile;  
+    boolean allowSkeleton = optionsHostileSpawns.getToggleValue("Skeleton") && allowHostile;  
+    boolean allowSlime = optionsHostileSpawns.getToggleValue("Slime") && allowHostile;  
+    boolean allowSpider = optionsHostileSpawns.getToggleValue("Spider") && allowHostile;  
+    boolean allowZombie = optionsHostileSpawns.getToggleValue("Zombie") && allowHostile;  
+    boolean allowBats = optionsPeacefulSpawns.getToggleValue("Bats") && allowPeaceful; 
+    boolean allowChicken = optionsPeacefulSpawns.getToggleValue("Chicken") && allowPeaceful; 
+    boolean allowCow = optionsPeacefulSpawns.getToggleValue("Cow") && allowPeaceful; 
+    boolean allowMooshroom = optionsPeacefulSpawns.getToggleValue("Mooshroom") && allowPeaceful; 
+    boolean allowOcelot = optionsPeacefulSpawns.getToggleValue("Ocelot/Cat") && allowPeaceful; 
+    boolean allowPig = optionsPeacefulSpawns.getToggleValue("Pig") && allowPeaceful; 
+    boolean allowSheep = optionsPeacefulSpawns.getToggleValue("Sheep") && allowPeaceful; 
+    boolean allowWolf = optionsPeacefulSpawns.getToggleValue("Wolf") && allowPeaceful; 
+    boolean allowSquid = optionsPeacefulSpawns.getToggleValue("Squid") && allowPeaceful; 
+    boolean allowNPCs = optionsPeacefulSpawns.getToggleValue("NPCs") && allowPeaceful;
+      
     // Hostile & Peaceful Spawn overrides
-    mc.theWorld.setAllowedSpawnTypes(optionsHostileSpawns.getToggleValue("Allow Hostile Spawns"), optionsPeacefulSpawns.getToggleValue("Allow Peaceful Spawns"));
+    mc.theWorld.setAllowedSpawnTypes(allowHostile, allowPeaceful);
+    if (!allowHostile) {
+      killAll(EntityCreeper.class, EnumCreatureType.monster);
+      killAll(EntityEnderman.class, EnumCreatureType.monster);
+      killAll(EntityGhast.class, EnumCreatureType.monster);
+      killAll(EntityMagmaCube.class, EnumCreatureType.monster);
+      killAll(EntityPigZombie.class, EnumCreatureType.monster);
+      killAll(EntitySkeleton.class, EnumCreatureType.monster);
+      killAll(EntitySlime.class, EnumCreatureType.monster);
+      killAll(EntitySpider.class, EnumCreatureType.monster);
+      killAll(EntityZombie.class, EnumCreatureType.monster);
+    }    
+    if (!allowPeaceful) {
+      killAll(EntityVillager.class, EnumCreatureType.creature); // Enum is a dummy value in this case.
+      killAll(EntityBat.class, EnumCreatureType.ambient);
+      killAll(EntityChicken.class, EnumCreatureType.creature);
+      killAll(EntityCow.class, EnumCreatureType.creature);
+      killAll(EntityMooshroom.class, EnumCreatureType.creature);
+      killAll(EntityOcelot.class, EnumCreatureType.creature);
+      killAll(EntityPig.class, EnumCreatureType.creature);
+      killAll(EntitySheep.class, EnumCreatureType.creature);
+      killAll(EntityWolf.class, EnumCreatureType.creature);
+      killAll(EntitySquid.class, EnumCreatureType.waterCreature);
+    }
     // NPCs
-    mc.getIntegratedServer().setCanSpawnNPCs(optionsPeacefulSpawns.getToggleValue("Allow Peaceful Spawns") && optionsPeacefulSpawns.getToggleValue("NPCs"));
-    // Bats
-    if (optionsPeacefulSpawns.getToggleValue("Bats")) {
-      ModLoader.addSpawn(EntityBat.class, 10, 8, 8, EnumCreatureType.ambient);
-    } else {
-      ModLoader.removeSpawn(EntityBat.class, EnumCreatureType.ambient);
+    mc.getIntegratedServer().setCanSpawnNPCs(allowNPCs);
+    if (!allowNPCs) { 
+      killAll(EntityVillager.class, EnumCreatureType.creature); // Enum is a dummy value in this case.
     }
-    // Chicken
-    if (optionsPeacefulSpawns.getToggleValue("Chicken")) {
-      ModLoader.addSpawn(EntityChicken.class, 10, 4, 4, EnumCreatureType.creature);
-    } else {
-      ModLoader.removeSpawn(EntityChicken.class, EnumCreatureType.creature);
+    if (!allowHostile && !allowPeaceful) {
+      return;
     }
-    // Cow    
-    if (optionsPeacefulSpawns.getToggleValue("Cow")) {
-      ModLoader.addSpawn(EntityCow.class, 8, 4, 4, EnumCreatureType.creature);
-    } else {
-      ModLoader.removeSpawn(EntityCow.class, EnumCreatureType.creature);
+    if (allowPeaceful) {
+      if (allowBats) {
+        ModLoader.addSpawn(EntityBat.class, 10, 8, 8, EnumCreatureType.ambient);
+      } else {
+        killAll(EntityBat.class, EnumCreatureType.ambient);
+      }
+      if (allowChicken) {
+        ModLoader.addSpawn(EntityChicken.class, 10, 4, 4, EnumCreatureType.creature);
+      } else {
+        killAll(EntityChicken.class, EnumCreatureType.creature);
+      }
+      if (allowCow) {
+        ModLoader.addSpawn(EntityCow.class, 8, 4, 4, EnumCreatureType.creature);
+      } else {
+        killAll(EntityCow.class, EnumCreatureType.creature);
+      }
+      if (allowMooshroom) {
+        ModLoader.addSpawn(EntityMooshroom.class, 8, 4, 8, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.mushroomIsland});
+      } else {
+        killAll(EntityMooshroom.class, EnumCreatureType.creature);
+      }
+      if (allowOcelot) {
+        ModLoader.addSpawn(EntityOcelot.class, 2, 1, 1, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.jungle});
+      } else {
+        killAll(EntityOcelot.class, EnumCreatureType.creature);
+      }
+      if (allowPig) {
+        ModLoader.addSpawn(EntityPig.class, 10, 4, 4, EnumCreatureType.creature);
+      } else {
+        killAll(EntityPig.class, EnumCreatureType.creature);
+      } 
+      if (allowSheep) {
+        ModLoader.addSpawn(EntitySheep.class, 12, 4, 4, EnumCreatureType.creature);
+      } else {
+        killAll(EntitySheep.class, EnumCreatureType.creature);
+      }
+      if (allowWolf) {
+        ModLoader.addSpawn(EntityWolf.class, 5, 4, 4, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.forest});
+        ModLoader.addSpawn(EntityWolf.class, 8, 4, 4, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.taiga});
+      } else {
+        killAll(EntityWolf.class, EnumCreatureType.creature);
+      }
+      if (allowSquid) {
+        ModLoader.addSpawn(EntitySquid.class, 10, 4, 4, EnumCreatureType.waterCreature);
+      } else {
+        killAll(EntitySquid.class, EnumCreatureType.waterCreature);
+      }
     }
-    // Mooshroom
-    if (optionsPeacefulSpawns.getToggleValue("Mooshroom")) {
-      ModLoader.addSpawn(EntityMooshroom.class, 8, 4, 8, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.mushroomIsland});
-    } else {
-      ModLoader.removeSpawn(EntityMooshroom.class, EnumCreatureType.creature);
+    if (allowHostile) {
+      if (allowCreeper) {
+        ModLoader.addSpawn(EntityCreeper.class, 10, 4, 4, EnumCreatureType.monster);
+      } else {
+        killAll(EntityCreeper.class, EnumCreatureType.monster);
+      }
+      if (allowEnderman) {
+        ModLoader.addSpawn(EntityEnderman.class, 1, 1, 4, EnumCreatureType.monster);
+      } else {
+        killAll(EntityEnderman.class, EnumCreatureType.monster);
+      }
+      if (allowGhast) {
+        ModLoader.addSpawn(EntityGhast.class, 50, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
+      } else {
+        killAll(EntityGhast.class, EnumCreatureType.monster);
+      }
+      if (allowMagmaCube) {
+        ModLoader.addSpawn(EntityMagmaCube.class, 1, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
+      } else {
+        killAll(EntityMagmaCube.class, EnumCreatureType.monster);
+      }
+      if (allowPigZombie) {
+        ModLoader.addSpawn(EntityPigZombie.class, 100, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
+      } else {
+        killAll(EntityPigZombie.class, EnumCreatureType.monster);
+      }
+      if (allowSkeleton) {
+        ModLoader.addSpawn(EntitySkeleton.class, 10, 4, 4, EnumCreatureType.monster);
+      } else {
+        killAll(EntitySkeleton.class, EnumCreatureType.monster);
+      }
+      if (allowSlime) {
+        ModLoader.addSpawn(EntitySlime.class, 10, 4, 4, EnumCreatureType.monster);
+      } else {
+        killAll(EntitySlime.class, EnumCreatureType.monster);
+      }
+      if (allowSpider) {
+        ModLoader.addSpawn(EntitySpider.class, 10, 4, 4, EnumCreatureType.monster);
+      } else {
+        killAll(EntitySpider.class, EnumCreatureType.monster);
+      }
+      if (allowZombie) {
+        ModLoader.addSpawn(EntityZombie.class, 10, 4, 4, EnumCreatureType.monster);
+      } else {
+        killAll(EntityZombie.class, EnumCreatureType.monster);
+      }
     }
-    // Ocelot
-    if (optionsPeacefulSpawns.getToggleValue("Ocelot/Cat")) {
-      ModLoader.addSpawn(EntityOcelot.class, 2, 1, 1, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.jungle});
-    } else {
-      ModLoader.removeSpawn(EntityOcelot.class, EnumCreatureType.creature);
-    }
-    // Pig    
-    if (optionsPeacefulSpawns.getToggleValue("Pig")) {
-      ModLoader.addSpawn(EntityPig.class, 10, 4, 4, EnumCreatureType.creature);
-    } else {
-      ModLoader.removeSpawn(EntityPig.class, EnumCreatureType.creature);
-    } 
-    // Sheep
-    if (optionsPeacefulSpawns.getToggleValue("Sheep")) {
-      ModLoader.addSpawn(EntitySheep.class, 12, 4, 4, EnumCreatureType.creature);
-    } else {
-      ModLoader.removeSpawn(EntitySheep.class, EnumCreatureType.creature);
-    }
-    // Wolf
-    if (optionsPeacefulSpawns.getToggleValue("Wolf")) {
-      ModLoader.addSpawn(EntityWolf.class, 5, 4, 4, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.forest});
-      ModLoader.addSpawn(EntityWolf.class, 8, 4, 4, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.taiga});
-    } else {
-      ModLoader.removeSpawn(EntityWolf.class, EnumCreatureType.creature);
-    }
-    // Squid    
-    if (optionsPeacefulSpawns.getToggleValue("Squid")) {
-      ModLoader.addSpawn(EntitySquid.class, 10, 4, 4, EnumCreatureType.waterCreature);
-    } else {
-      ModLoader.removeSpawn(EntitySquid.class, EnumCreatureType.waterCreature);
-    }
-    // Creeper
-    if (optionsHostileSpawns.getToggleValue("Creeper")) {
-      ModLoader.addSpawn(EntityCreeper.class, 10, 4, 4, EnumCreatureType.monster);
-    } else {
-      ModLoader.removeSpawn(EntityCreeper.class, EnumCreatureType.monster);
-    }
-    // Enderman
-    if (optionsHostileSpawns.getToggleValue("Enderman")) {
-      ModLoader.addSpawn(EntityEnderman.class, 1, 1, 4, EnumCreatureType.monster);
-    } else {
-      ModLoader.removeSpawn(EntityEnderman.class, EnumCreatureType.monster);
-    }
-    // Ghast
-    if (optionsHostileSpawns.getToggleValue("Ghast")) {
-      ModLoader.addSpawn(EntityGhast.class, 50, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
-    } else {
-      ModLoader.removeSpawn(EntityGhast.class, EnumCreatureType.monster);
-    }
-    // MagmaCube
-    if (optionsHostileSpawns.getToggleValue("Magma Cube")) {
-      ModLoader.addSpawn(EntityMagmaCube.class, 1, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
-    } else {
-      ModLoader.removeSpawn(EntityMagmaCube.class, EnumCreatureType.monster);
-    }
-    // PigZombie
-    if (optionsHostileSpawns.getToggleValue("Pig Zombie")) {
-      ModLoader.addSpawn(EntityPigZombie.class, 100, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
-    } else {
-      ModLoader.removeSpawn(EntityPigZombie.class, EnumCreatureType.monster);
-    }
-    // Skeleton    
-    if (optionsHostileSpawns.getToggleValue("Skeleton")) {
-      ModLoader.addSpawn(EntitySkeleton.class, 10, 4, 4, EnumCreatureType.monster);
-    } else {
-      ModLoader.removeSpawn(EntitySkeleton.class, EnumCreatureType.monster);
-    }
-    // Slime    
-    if (optionsHostileSpawns.getToggleValue("Slime")) {
-      ModLoader.addSpawn(EntitySlime.class, 10, 4, 4, EnumCreatureType.monster);
-    } else {
-      ModLoader.removeSpawn(EntitySlime.class, EnumCreatureType.monster);
-    }
-    // Spider    
-    if (optionsHostileSpawns.getToggleValue("Spider")) {
-      ModLoader.addSpawn(EntitySpider.class, 10, 4, 4, EnumCreatureType.monster);
-    } else {
-      ModLoader.removeSpawn(EntitySpider.class, EnumCreatureType.monster);
-    }
-    // Zombie    
-    if (optionsHostileSpawns.getToggleValue("Zombie")) {
-      ModLoader.addSpawn(EntityZombie.class, 10, 4, 4, EnumCreatureType.monster);
-    } else {
-      ModLoader.removeSpawn(EntityZombie.class, EnumCreatureType.monster);
-    }
-    return true;
   }
   
-	public void removeRecipe(int item) {
+  public static void killAll(Class entityType, EnumCreatureType creatureType) {
+    ModLoader.removeSpawn(entityType, creatureType);
+    for (int idx=0; idx<mc.theWorld.loadedEntityList.size(); idx++) {
+      Entity ent = (Entity)mc.theWorld.loadedEntityList.get(idx);
+      if ((ent!=null) && (entityType.isInstance(ent))) {
+        ((EntityLiving)ent).setDead();
+      }
+    }
+  }
+  
+	public static void removeRecipe(int item) {
 		Iterator<?> itr = CraftingManager.getInstance().getRecipeList().iterator();
 		
 		while (itr.hasNext()) {
@@ -333,6 +422,8 @@ public class mod_MyWay extends BaseMod {
     optionsMain.addSubOptions(optionsPeacefulSpawns);
     optionsSpecial = new ModOptions("Minecraft My Way - Special");
     optionsMain.addSubOptions(optionsSpecial);
+    optionsWorldGen = new ModOptions("Minecraft My Way - Default World Gen");
+    optionsMain.addSubOptions(optionsWorldGen);
     // Add options to Hostile Spawn screen
 	  optionsHostileSpawns.addToggle("Zombie").setValue(true);
 	  optionsHostileSpawns.addToggle("Spider").setValue(true);
@@ -369,6 +460,13 @@ public class mod_MyWay extends BaseMod {
 	  optionsSpecial.addToggle("Gravel/Sand Gravity").setValue(true);
 	  optionsSpecial.addToggle("Stone Drops Gravel").setValue(false);
 	  optionsSpecial.addToggle("Bonemeal Instagrowth").setValue(true);
+    // Add options to World Gen screen
+	  optionsWorldGen.addToggle("Villages").setValue(true);
+	  optionsWorldGen.addToggle("Strongholds").setValue(true);
+	  optionsWorldGen.addToggle("Scattered Features").setValue(true);
+	  optionsWorldGen.addToggle("Ravines").setValue(true);
+	  optionsWorldGen.addToggle("Mineshafts").setValue(true);
+	  optionsWorldGen.addToggle("Caves").setValue(true);
 	  // Load saved values over defaults (if any)
     optionsMain.loadValues();
     // Save current values
@@ -381,5 +479,14 @@ public class mod_MyWay extends BaseMod {
 	
   public String getVersion() {
     return Version;
+  }
+
+  public mod_MyWay() {
+    isObfuscated = false;
+    try {
+      Class.forName("net.minecraft.src.MathHelper", false, this.getClass().getClassLoader());
+    } catch (ClassNotFoundException e) {
+      isObfuscated = true;
+    }  
   }
 }

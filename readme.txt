@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Minecraft My Way - Mod for Mincraft
 //    by Jonathan "Wyrd" Brazell
-//    Version: 0.3
+//    Version: 0.4
 //    Minecraft Version: 1.4.2
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -16,11 +16,17 @@
 // 3. Delete the META-INF folder
 // 4. Install ModLoader (http://www.minecraftforum.net/topic/75440-/).
 // 5. Install ModOptionsAPI (http://www.minecraftforum.net/topic/1163014-/)
-// 6. Copy the contents of the mod_MyWay.zip file into minecraft.jar
+// 6. Copy mod_MyWay.zip  to your mods folder
 // 7. Start up minecraft and play.
 ///////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////VERSION HISTORY///////////////////////////////
+// 0.4 - Added World Gen option for Caves
+//      * Added World Gen option for Strongholds
+//      * Added World Gen option for Villages
+//      * Added World Gen option for Mineshafts
+//      * Added World Gen option for Scattered Features (Pyramids/Swamp Huts)
+//      * Added World Gen option for Ravines
 // 0.3 - Updated to minecraft 1.4.2
 //      * Added option to remove Bat spawn
 // 0.2 - Updated to minecraft 1.3.1/1.3.2
