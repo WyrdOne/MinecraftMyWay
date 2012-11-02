@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Minecraft My Way - Mod for Mincraft
 //    by Jonathan "Wyrd" Brazell
-//    Version: 0.1
-//    Minecraft Version: 1.2.5
+//    Version: 0.2
+//    Minecraft Version: 1.3.2
 ///////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////OVERVIEW///////////////////////////////////
@@ -15,16 +15,24 @@
 // 2. Using 7zip or equally capable ZIP viewer open minecraft.jar
 // 3. Delete the META-INF folder
 // 4. Install ModLoader
-//    (http://www.minecraftforum.net/topic/75440-v125-risugamis-mods-everything-updated/).
+//    (http://www.minecraftforum.net/topic/75440-v132-risugamis-mods-preliminary-updates/).
 // 5. Install ModOptionsAPI
-//    (http://www.minecraftforum.net/topic/191591-v11-moapi-modoptionsapi-8/)
-//    Currently not updated to 1.2.5, I have made the needed adjustments,
-//    available at (http://dl.dropbox.com/u/47926025/moapi-1.2.5.zip).
-// 6. Copy the mod_MyWay.zip file into /.minecraft/mods/
+//    (http://www.minecraftforum.net/topic/1163014-131-moapi-modoptionsapi-forked/)
+// 6. Copy the contents of the mod_MyWay.zip file into minecraft.jar
 // 7. Start up minecraft and play.
 ///////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////VERSION HISTORY///////////////////////////////
+// 0.2 - Updated to minecraft 1.3.1/1.3.2
+//      * Added option to disable ALL hostile spawns
+//      * Added option to disable ALL peaceful spawns
+//      * Added option to disable NPC spawns
+//      * Added option to craft stone tools from flint
+//      * Added option to craft cobblestone from gravel and clay
+//      * Added option to craft flint from gravel
+//      * Added option to disable cobblestone tools
+//      * Added option to stop gravel/sand from falling
+//      * Added option to make stone drop gravel when harvested
 // 0.1 - Initial release
 //      * Added option to remove Diamond tool recipes  
 //      * Added option to remove Diamond armor recipes 
