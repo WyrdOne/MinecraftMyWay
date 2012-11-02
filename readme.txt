@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Minecraft My Way - Mod for Mincraft
 //    by Jonathan "Wyrd" Brazell
-//    Version: 0.2
-//    Minecraft Version: 1.3.2
+//    Version: 0.3
+//    Minecraft Version: 1.4.2
 ///////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////OVERVIEW///////////////////////////////////
@@ -14,15 +14,15 @@
 // 1. Go to the minecraft bin directory and backup minecraft.jar
 // 2. Using 7zip or equally capable ZIP viewer open minecraft.jar
 // 3. Delete the META-INF folder
-// 4. Install ModLoader
-//    (http://www.minecraftforum.net/topic/75440-v132-risugamis-mods-preliminary-updates/).
-// 5. Install ModOptionsAPI
-//    (http://www.minecraftforum.net/topic/1163014-131-moapi-modoptionsapi-forked/)
+// 4. Install ModLoader (http://www.minecraftforum.net/topic/75440-/).
+// 5. Install ModOptionsAPI (http://www.minecraftforum.net/topic/1163014-/)
 // 6. Copy the contents of the mod_MyWay.zip file into minecraft.jar
 // 7. Start up minecraft and play.
 ///////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////VERSION HISTORY///////////////////////////////
+// 0.3 - Updated to minecraft 1.4.2
+//      * Added option to remove Bat spawn
 // 0.2 - Updated to minecraft 1.3.1/1.3.2
 //      * Added option to disable ALL hostile spawns
 //      * Added option to disable ALL peaceful spawns

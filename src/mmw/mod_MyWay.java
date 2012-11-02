@@ -2,17 +2,16 @@ package net.minecraft.src;
 
 import java.util.Iterator;
 import net.minecraft.client.Minecraft;
-import moapi.ModOptions;
-import moapi.ModOptionsAPI;
+import moapi.*;
 import java.io.PrintWriter;
 
 public class mod_MyWay extends BaseMod {
   // Copyright/license info
   private static final String Name = "Minecraft My Way";
-  private static final String Version = "0.2 (For use with Minecraft 1.3.2)";
+  private static final String Version = "0.3 (For use with Minecraft 1.4.2)";
 	private static final String Copyright = "All original code and images (C) 2011-2012, Jonathan \"Wyrd\" Brazell";
 	private static final String License = "This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.";
-  private static final String ModLoaderVersion = "ModLoader 1.3.2";
+  private static final String ModLoaderVersion = "ModLoader 1.4.2";
   // Options
   private static ModOptions optionsMain;
   private static ModOptions optionsHostileSpawns;
@@ -191,8 +190,14 @@ public class mod_MyWay extends BaseMod {
     }
     // Hostile & Peaceful Spawn overrides
     mc.theWorld.setAllowedSpawnTypes(optionsHostileSpawns.getToggleValue("Allow Hostile Spawns"), optionsPeacefulSpawns.getToggleValue("Allow Peaceful Spawns"));
-    // NPCs 
-    mc.getIntegratedServer().setSpawnNpcs(optionsPeacefulSpawns.getToggleValue("Allow Peaceful Spawns") && optionsPeacefulSpawns.getToggleValue("NPCs"));
+    // NPCs
+    mc.getIntegratedServer().setCanSpawnNPCs(optionsPeacefulSpawns.getToggleValue("Allow Peaceful Spawns") && optionsPeacefulSpawns.getToggleValue("NPCs"));
+    // Bats
+    if (optionsPeacefulSpawns.getToggleValue("Bats")) {
+      ModLoader.addSpawn(EntityBat.class, 10, 8, 8, EnumCreatureType.ambient);
+    } else {
+      ModLoader.removeSpawn(EntityBat.class, EnumCreatureType.ambient);
+    }
     // Chicken
     if (optionsPeacefulSpawns.getToggleValue("Chicken")) {
       ModLoader.addSpawn(EntityChicken.class, 10, 4, 4, EnumCreatureType.creature);
@@ -349,6 +354,7 @@ public class mod_MyWay extends BaseMod {
 	  optionsPeacefulSpawns.addToggle("Mooshroom").setValue(true);
 	  optionsPeacefulSpawns.addToggle("Cow").setValue(true);
 	  optionsPeacefulSpawns.addToggle("Chicken").setValue(true);
+	  optionsPeacefulSpawns.addToggle("Bats").setValue(true);
 	  optionsPeacefulSpawns.addToggle("Allow Peaceful Spawns").setValue(true);
     // Add options to Recipe screen
 	  optionsRecipes.addToggle("Flint Tools").setValue(false);
