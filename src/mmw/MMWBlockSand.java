@@ -24,7 +24,7 @@ public class MMWBlockSand extends BlockSand {
                 methodName = "tryToFall";
             }
             try {
-                method = Block.sand.getClass().getDeclaredMethod(methodName, null);
+                method = Block.sand.getClass().getDeclaredMethod(methodName, (Class[])null);
             } catch (Exception ignored) {
                 return;
             }

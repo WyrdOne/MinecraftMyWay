@@ -1,15 +1,16 @@
 package net.minecraft.src;
 
-import java.util.Iterator;
+import java.util.*;
 import java.lang.reflect.*;
 import java.io.PrintWriter;
 import net.minecraft.client.Minecraft;
-import moapi.*;
+import net.minecraft.server.MinecraftServer;
+import moapi.api.*;
 
 public class mod_MyWay extends BaseMod {
   // Copyright/license info
   private static final String Name = "Minecraft My Way";
-  private static final String Version = "0.5 (For use with Minecraft 1.4.2)";
+  private static final String Version = "0.6 (For use with Minecraft 1.4.4)";
 	private static final String Copyright = "All original code and images (C) 2011-2012, Jonathan \"Wyrd\" Brazell";
 	private static final String License = "This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.";
   // Options
@@ -28,6 +29,8 @@ public class mod_MyWay extends BaseMod {
 	private static boolean craftFlint = false;
 	private static boolean craftCobblestone = false;
 	private static boolean flintTools = false;
+	private static boolean extendedCrafting = false;
+	private static boolean timeFlow = false;
   // World Generation Options
   public static boolean genCaves = true;
   public static boolean genStrongholds = true;
@@ -35,9 +38,25 @@ public class mod_MyWay extends BaseMod {
   public static boolean genMineshafts = true;
   public static boolean genScatteredFeatures = true;
   public static boolean genRavines = true;
+  // Peaceful mob adjustments
+  public static boolean peacefulDropBones = false;
+  public static boolean peacefulAdjustDrops = false;
+  // Items for flint tools
+  public static Item hoeFlint;
+  public static Item axeFlint;
+  public static Item pickaxeFlint;
+  public static Item spearFlint;  
+  // Items for hatchets
+  public static Item hatchetFlint;
+  public static Item hatchetWood;
+  public static Item hatchetStone;
+  public static Item hatchetIron;
+  public static Item hatchetDiamond;
+  public static Item hatchetGold;
   // Other variables
   public static boolean isObfuscated;
   private static MMWWorldType mmwWorldType = new MMWWorldType();
+  private static MMWFoodStats mmwFoodStats = new MMWFoodStats();
   private static Minecraft mc = ModLoader.getMinecraftInstance();
   private static Block saveStone = Block.stone;
   private static Block mmwStone;
@@ -47,10 +66,12 @@ public class mod_MyWay extends BaseMod {
   private static Block mmwGravel;
   private static Item saveItemDye = Item.dyePowder;
   private static int tickCounter = 0;
+  private static int baseItemID = 12120;
       	
   public void load() {
     // Set up options menu for mod options
     initModOptionsAPI();
+    baseItemID = Integer.parseInt(optionsRecipes.getOptionValue("Base Item ID"));
 
     // Replace Stone
     Block.blocksList[Block.stone.blockID] = null;
@@ -71,12 +92,76 @@ public class mod_MyWay extends BaseMod {
     Item.itemsList[Item.dyePowder.shiftedIndex] = null;
     Item.dyePowder = (new MMWItemDye(95)).setIconCoord(14, 4).setItemName("dyePowder");
 
+    // Remove spawns for vanilla mobs, add custom mob spawns to replace them
+    ModLoader.removeSpawn(EntityCow.class, EnumCreatureType.creature);
+    ModLoader.removeSpawn(EntityPig.class, EnumCreatureType.creature);
+    ModLoader.removeSpawn(EntitySheep.class, EnumCreatureType.creature);
+    ModLoader.registerEntityID(MMWEntityCow.class, "Cow", 92);
+    ModLoader.registerEntityID(MMWEntityPig.class, "Pig", 90);
+    ModLoader.registerEntityID(MMWEntitySheep.class, "Sheep", 91);
+    ModLoader.addSpawn(MMWEntityCow.class, 8, 4, 4, EnumCreatureType.creature);
+    ModLoader.addSpawn(MMWEntityPig.class, 10, 4, 4, EnumCreatureType.creature);
+    ModLoader.addSpawn(MMWEntitySheep.class, 12, 4, 4, EnumCreatureType.creature);
+
+    // Add flint tool items
+    hoeFlint = new MMWItemHoe(baseItemID+0, MMWEnumToolMaterial.FLINT).setItemName("hoeFlint").setIconCoord(1, 8);
+    axeFlint = new MMWItemAxe(baseItemID+1, MMWEnumToolMaterial.FLINT).setItemName("axeFlint").setIconCoord(1, 7);
+    pickaxeFlint = new MMWItemPickaxe(baseItemID+2, MMWEnumToolMaterial.FLINT).setItemName("pickaxeFlint").setIconCoord(1, 6);
+    spearFlint = new MMWItemSpear(baseItemID+3, MMWEnumToolMaterial.FLINT).setItemName("spearFlint").setIconCoord(1, 4);  
+    ModLoader.addName(pickaxeFlint, "Flint Pickaxe");
+    ModLoader.addName(spearFlint, "Flint Spear");      
+    ModLoader.addName(axeFlint, "Flint Axe");
+    ModLoader.addName(hoeFlint, "Flint Hoe");
+    if (optionsRecipes.getToggleValue("Flint Tools")) {
+      flintTools = true;
+      ModLoader.addRecipe(new ItemStack(spearFlint, 1), new Object[] {"F", "S", "S", 'F', Item.flint, 'S', Item.stick}); 
+      ModLoader.addRecipe(new ItemStack(pickaxeFlint, 1), new Object[] {"FFF", " S ", " S ", 'F', Item.flint, 'S', Item.stick}); 
+      ModLoader.addRecipe(new ItemStack(axeFlint, 1), new Object[] {"FF", "FS", " S", 'F', Item.flint, 'S', Item.stick}); 
+      ModLoader.addRecipe(new ItemStack(hoeFlint, 1), new Object[] {"FF", " S", " S", 'F', Item.flint, 'S', Item.stick});
+    }
+
+    // Add hatchets
+    hatchetFlint = new MMWItemHatchetFlint(baseItemID+4, MMWEnumToolMaterial.FLINT).setItemName("hatchetFlint").setIconCoord(1, 7);
+    hatchetWood = new MMWItemHatchet(baseItemID+5, EnumToolMaterial.WOOD).setItemName("hatchetWood").setIconCoord(0, 7);
+    hatchetStone = new MMWItemHatchet(baseItemID+6, EnumToolMaterial.STONE).setItemName("hatchetStone").setIconCoord(1, 7);
+    hatchetIron = new MMWItemHatchet(baseItemID+7, EnumToolMaterial.IRON).setItemName("hatchetIron").setIconCoord(2, 7);
+    hatchetDiamond = new MMWItemHatchet(baseItemID+8, EnumToolMaterial.EMERALD).setItemName("hatchetDiamond").setIconCoord(3, 7);
+    hatchetGold = new MMWItemHatchet(baseItemID+9, EnumToolMaterial.GOLD).setItemName("hatchetGold").setIconCoord(4, 7);
+    ModLoader.addName(hatchetFlint, "Flint Hatchet");
+    ModLoader.addName(hatchetWood, "Wood Hatchet");
+    ModLoader.addName(hatchetStone, "Stone Hatchet");
+    ModLoader.addName(hatchetIron, "Iron Hatchet");
+    ModLoader.addName(hatchetDiamond, "Diamond Hatchet");
+    ModLoader.addName(hatchetGold, "Gold Hatchet");
+	  if (optionsRecipes.getToggleValue("Extended 2x2 Crafting") && optionsRecipes.getToggleValue("Flint Tools")) {
+      ModLoader.addRecipe(new ItemStack(hatchetFlint, 1), new Object[] {"FS", "S ", 'F', Item.flint, 'S', Item.stick}); 
+    } 
+	  if (optionsRecipes.getToggleValue("Extended 2x2 Crafting") && optionsRecipes.getToggleValue("Wood Axes")) {
+      ModLoader.addRecipe(new ItemStack(hatchetWood, 1), new Object[] {"WS", "S ", 'W', Block.planks, 'S', Item.stick}); 
+    } 
+	  if (optionsRecipes.getToggleValue("Extended 2x2 Crafting") && optionsRecipes.getToggleValue("Cobblestone Tools")) {
+      ModLoader.addRecipe(new ItemStack(hatchetStone, 1), new Object[] {"CS", "S ", 'C', Block.cobblestone, 'S', Item.stick}); 
+    } 
+	  if (optionsRecipes.getToggleValue("Extended 2x2 Crafting")) {
+      ModLoader.addRecipe(new ItemStack(hatchetIron, 1), new Object[] {"IS", "S ", 'I', Item.ingotIron, 'S', Item.stick}); 
+    }
+	  if (optionsRecipes.getToggleValue("Extended 2x2 Crafting") && optionsRecipes.getToggleValue("Diamond Tools")) {
+      ModLoader.addRecipe(new ItemStack(hatchetDiamond, 1), new Object[] {"DS", "S ", 'D', Item.diamond, 'S', Item.stick}); 
+    } 
+	  if (optionsRecipes.getToggleValue("Extended 2x2 Crafting")) {
+      ModLoader.addRecipe(new ItemStack(hatchetGold, 1), new Object[] {"GS", "S ", 'G', Item.ingotGold, 'S', Item.stick}); 
+    } 
+     
     // Check for option changes every tick
     ModLoader.setInGameHook(this, true, true);
-	}
+  }
 
   public boolean onTickInGame(float f, Minecraft paramMinecraft) {
     processSpawns();
+    processTimeFlow();
+    if (mc.thePlayer!=null && !optionsSpecial.getToggleValue("Sprinting")) {
+      mc.thePlayer.setSprinting(false);
+    }
     // Don't need to check other options every tick.
     tickCounter++;
     if ((tickCounter & 0x001f)!=0x0001)
@@ -84,6 +169,48 @@ public class mod_MyWay extends BaseMod {
     processSpecial();
     processRecipes();
     return true;
+  }
+
+  public static void processTimeFlow() {
+    if (optionsSpecial.getOptionValue("Time Flow")=="Always Day") {
+      for (int idx=0; idx<MinecraftServer.getServer().worldServers.length; idx++) {
+        long time = MinecraftServer.getServer().worldServers[idx].getWorldTime();
+        if ((time%24000)>12000) {
+          time = (time / 24000) * 24000; 
+          MinecraftServer.getServer().worldServers[idx].setWorldTime(time);
+        }
+      }
+    } else if (optionsSpecial.getOptionValue("Time Flow")=="Always Night") {
+      for (int idx=0; idx<MinecraftServer.getServer().worldServers.length; idx++) {
+        long time = MinecraftServer.getServer().worldServers[idx].getWorldTime();
+        if (((time%24000)<13800) || ((time%24000)>22200)) {
+          time = ((time / 24000) * 24000) + 13800; 
+          MinecraftServer.getServer().worldServers[idx].setWorldTime(time);
+        }
+      }
+    } else if (optionsSpecial.getOptionValue("Time Flow")=="Rapid") {
+      for (int idx=0; idx<MinecraftServer.getServer().worldServers.length; idx++) {
+        long time = MinecraftServer.getServer().worldServers[idx].getWorldTime();
+        MinecraftServer.getServer().worldServers[idx].setWorldTime(time + 1);
+      }
+    } else if (optionsSpecial.getOptionValue("Time Flow")=="Slow") {
+      if (timeFlow) {
+        for (int idx=0; idx<MinecraftServer.getServer().worldServers.length; idx++) {
+          long time = MinecraftServer.getServer().worldServers[idx].getWorldTime();
+          MinecraftServer.getServer().worldServers[idx].setWorldTime(time - 1);
+        }
+      }
+      timeFlow = !timeFlow;
+    } else if (optionsSpecial.getOptionValue("Time Flow")=="Single Day") {
+      for (int idx=0; idx<MinecraftServer.getServer().worldServers.length; idx++) {
+        long totaltime = MinecraftServer.getServer().worldServers[idx].worldInfo.getWorldTotalTime();
+        long time = MinecraftServer.getServer().worldServers[idx].getWorldTime();
+        if ((totaltime>13800) && (((time%24000)<13800) || ((time%24000)>22200))) {
+          time = ((time / 24000) * 24000) + 13800; 
+          MinecraftServer.getServer().worldServers[idx].setWorldTime(time);
+        }
+      }
+    } 
   }
 
   public static void processWorldGen() {
@@ -104,6 +231,23 @@ public class mod_MyWay extends BaseMod {
     ((MMWBlockGravel)mmwGravel).gravityWorks = optionsSpecial.getToggleValue("Gravel/Sand Gravity"); 
     // Stone
     ((MMWBlockStone)Block.blocksList[Block.stone.blockID]).drop = optionsSpecial.getToggleValue("Stone Drops Gravel") ? Block.gravel.blockID : Block.cobblestone.blockID;
+    // Set custom FoodStats
+    if (mc.thePlayer!=null) {
+      mc.thePlayer.foodStats = mmwFoodStats;
+      if (mc.thePlayer.worldObj.isRemote) {
+        for (int idx=0; idx<mc.getIntegratedServer().getConfigurationManager().playerEntityList.size(); idx++) {
+          ((EntityPlayerMP)mc.getIntegratedServer().getConfigurationManager().playerEntityList.get(idx)).foodStats = mmwFoodStats;
+        }
+      }
+    }
+    // Fatigue/Exhaustion
+    if (optionsSpecial.getToggleValue("Exhaustion")) {
+      mmwFoodStats.setFoodExhaustionLevel(0.0F);
+    }
+    // Hunger
+    mmwFoodStats.hunger = optionsSpecial.getToggleValue("Hunger");
+    // Healing
+    mmwFoodStats.healing = optionsSpecial.getToggleValue("Auto Healing");
   }
 
   public static void processRecipes() {
@@ -111,11 +255,11 @@ public class mod_MyWay extends BaseMod {
     if (!optionsRecipes.getToggleValue("Diamond Tools")) {
       if (!removeDiamondTools) {
         removeDiamondTools = true;
-        removeRecipe(Item.swordDiamond.shiftedIndex);
-        removeRecipe(Item.shovelDiamond.shiftedIndex);
-        removeRecipe(Item.pickaxeDiamond.shiftedIndex);
-        removeRecipe(Item.axeDiamond.shiftedIndex);
-        removeRecipe(Item.hoeDiamond.shiftedIndex);
+        removeRecipe(new ItemStack(Item.swordDiamond, 1), new Object[] {"D", "D", "S", 'D', Item.diamond, 'S', Item.stick}); 
+        removeRecipe(new ItemStack(Item.shovelDiamond, 1), new Object[] {"D", "S", "S", 'D', Item.diamond, 'S', Item.stick}); 
+        removeRecipe(new ItemStack(Item.pickaxeDiamond, 1), new Object[] {"DDD", " S ", " S ", 'D', Item.diamond, 'S', Item.stick}); 
+        removeRecipe(new ItemStack(Item.axeDiamond, 1), new Object[] {"DD", "DS", " S", 'D', Item.diamond, 'S', Item.stick}); 
+        removeRecipe(new ItemStack(Item.hoeDiamond, 1), new Object[] {"DD", " S", " S", 'D', Item.diamond, 'S', Item.stick}); 
       }
     } else if (removeDiamondTools) {
       removeDiamondTools = false;
@@ -129,13 +273,12 @@ public class mod_MyWay extends BaseMod {
     if (!optionsRecipes.getToggleValue("Diamond Armor")) {
       if (!removeDiamondArmor) {
         removeDiamondArmor = true;
-        removeRecipe(Item.helmetDiamond.shiftedIndex);
-        removeRecipe(Item.plateDiamond.shiftedIndex);
-        removeRecipe(Item.legsDiamond.shiftedIndex);
-        removeRecipe(Item.bootsDiamond.shiftedIndex); 
+        removeRecipe(new ItemStack(Item.helmetDiamond, 1), new Object[] {"DDD", "D D", 'D', Item.diamond}); 
+        removeRecipe(new ItemStack(Item.plateDiamond, 1), new Object[] {"D D", "DDD", "DDD", 'D', Item.diamond}); 
+        removeRecipe(new ItemStack(Item.legsDiamond, 1), new Object[] {"DDD", "D D", "D D", 'D', Item.diamond}); 
+        removeRecipe(new ItemStack(Item.bootsDiamond, 1), new Object[] {"D D", "D D", 'D', Item.diamond}); 
       }
     } else if (removeDiamondArmor) {
-
       removeDiamondArmor = false;
       ModLoader.addRecipe(new ItemStack(Item.helmetDiamond, 1), new Object[] {"DDD", "D D", 'D', Item.diamond}); 
       ModLoader.addRecipe(new ItemStack(Item.plateDiamond, 1), new Object[] {"D D", "DDD", "DDD", 'D', Item.diamond}); 
@@ -146,8 +289,8 @@ public class mod_MyWay extends BaseMod {
     if (!optionsRecipes.getToggleValue("Wood Axes")) {
       if (!removeWoodAxes) {
         removeWoodAxes = true;
-        removeRecipe(Item.pickaxeWood.shiftedIndex);
-        removeRecipe(Item.axeWood.shiftedIndex);
+        removeRecipe(new ItemStack(Item.pickaxeWood, 1), new Object[] {"WWW", " S ", " S ", 'W', Block.planks, 'S', Item.stick}); 
+        removeRecipe(new ItemStack(Item.axeWood, 1), new Object[] {"WW", "WS", " S", 'W', Block.planks, 'S', Item.stick}); 
       }
     } else if (removeWoodAxes) {
       removeWoodAxes = false;
@@ -158,15 +301,15 @@ public class mod_MyWay extends BaseMod {
     if (!optionsRecipes.getToggleValue("Cobblestone Tools")) {
       if (!removeCobblestoneTools) {
         removeCobblestoneTools = true;
-        removeRecipe(Item.swordStone.shiftedIndex);
-        removeRecipe(Item.shovelStone.shiftedIndex);
-        removeRecipe(Item.pickaxeStone.shiftedIndex);
-        removeRecipe(Item.axeStone.shiftedIndex);
-        removeRecipe(Item.hoeStone.shiftedIndex);
+        removeRecipe(new ItemStack(Item.swordStone, 1), new Object[] {"C", "C", "S", 'C', Block.cobblestone, 'S', Item.stick}); 
+        removeRecipe(new ItemStack(Item.shovelStone, 1), new Object[] {"C", "S", "S", 'C', Block.cobblestone, 'S', Item.stick}); 
+        removeRecipe(new ItemStack(Item.pickaxeStone, 1), new Object[] {"CCC", " S ", " S ", 'C', Block.cobblestone, 'S', Item.stick}); 
+        removeRecipe(new ItemStack(Item.axeStone, 1), new Object[] {"CC", "CS", " S", 'C', Block.cobblestone, 'S', Item.stick}); 
+        removeRecipe(new ItemStack(Item.hoeStone, 1), new Object[] {"CC", " S", " S", 'C', Block.cobblestone, 'S', Item.stick}); 
       }
     } else if (removeCobblestoneTools) {
       removeCobblestoneTools = false;
-      ModLoader.addRecipe(new ItemStack(Item.swordStone, 1), new Object[] {"C", "C", "C", 'C', Block.cobblestone, 'S', Item.stick}); 
+      ModLoader.addRecipe(new ItemStack(Item.swordStone, 1), new Object[] {"C", "C", "S", 'C', Block.cobblestone, 'S', Item.stick}); 
       ModLoader.addRecipe(new ItemStack(Item.shovelStone, 1), new Object[] {"C", "S", "S", 'C', Block.cobblestone, 'S', Item.stick}); 
       ModLoader.addRecipe(new ItemStack(Item.pickaxeStone, 1), new Object[] {"CCC", " S ", " S ", 'C', Block.cobblestone, 'S', Item.stick}); 
       ModLoader.addRecipe(new ItemStack(Item.axeStone, 1), new Object[] {"CC", "CS", " S", 'C', Block.cobblestone, 'S', Item.stick}); 
@@ -176,7 +319,7 @@ public class mod_MyWay extends BaseMod {
     if (optionsRecipes.getToggleValue("TNT")) {
       if (!removeTNT) {
         removeTNT = true;
-        removeRecipe(Block.tnt.blockID);
+        removeRecipe(new ItemStack(Block.tnt, 1), new Object[] {"X#X", "#X#", "X#X", 'X', Item.gunpowder, '#', Block.sand});
       }
     } else if (removeTNT) {
       removeTNT = false;
@@ -190,7 +333,7 @@ public class mod_MyWay extends BaseMod {
       }
     } else if (craftFlint) {
       craftFlint = false;
-      removeRecipe(Item.flint.shiftedIndex);
+      removeRecipe(new ItemStack(Item.flint, 1), new Object[] {"#", '#', Block.gravel});
     }
     // Craft Cobblestone
     if (optionsRecipes.getToggleValue("Craft Cobblestone")) {
@@ -200,32 +343,66 @@ public class mod_MyWay extends BaseMod {
       }
     } else if (craftCobblestone) {
       craftCobblestone = false;
-      removeRecipe(Block.cobblestone.blockID);
+      removeRecipe(new ItemStack(Block.cobblestone, 2), new Object[] {"#c", "c#", '#', Block.gravel, 'c', Item.clay});
     }
     // Flint Tools
     if (optionsRecipes.getToggleValue("Flint Tools")) {
       if (!flintTools) {
         flintTools = true;
-        ModLoader.addRecipe(new ItemStack(Item.swordStone, 1), new Object[] {"C", "C", "C", 'C', Item.flint, 'S', Item.stick}); 
-        ModLoader.addRecipe(new ItemStack(Item.shovelStone, 1), new Object[] {"C", "S", "S", 'C', Item.flint, 'S', Item.stick}); 
-        ModLoader.addRecipe(new ItemStack(Item.pickaxeStone, 1), new Object[] {"CCC", " S ", " S ", 'C', Item.flint, 'S', Item.stick}); 
-        ModLoader.addRecipe(new ItemStack(Item.axeStone, 1), new Object[] {"CC", "CS", " S", 'C', Item.flint, 'S', Item.stick}); 
-        ModLoader.addRecipe(new ItemStack(Item.hoeStone, 1), new Object[] {"CC", " S", " S", 'C', Item.flint, 'S', Item.stick}); 
+        ModLoader.addRecipe(new ItemStack(spearFlint, 1), new Object[] {"F", "S", "S", 'F', Item.flint, 'S', Item.stick}); 
+        ModLoader.addRecipe(new ItemStack(pickaxeFlint, 1), new Object[] {"FFF", " S ", " S ", 'F', Item.flint, 'S', Item.stick}); 
+        ModLoader.addRecipe(new ItemStack(axeFlint, 1), new Object[] {"FF", "FS", " S", 'F', Item.flint, 'S', Item.stick}); 
+        ModLoader.addRecipe(new ItemStack(hoeFlint, 1), new Object[] {"FF", " S", " S", 'F', Item.flint, 'S', Item.stick});
       }
     } else if (flintTools) {
       flintTools = false;
-      removeRecipe(Item.swordStone.shiftedIndex);
-      removeRecipe(Item.shovelStone.shiftedIndex);
-      removeRecipe(Item.pickaxeStone.shiftedIndex);
-      removeRecipe(Item.axeStone.shiftedIndex);
-      removeRecipe(Item.hoeStone.shiftedIndex);
-      if (!removeCobblestoneTools) {
-        ModLoader.addRecipe(new ItemStack(Item.swordStone, 1), new Object[] {"C", "C", "C", 'C', Block.cobblestone, 'S', Item.stick}); 
-        ModLoader.addRecipe(new ItemStack(Item.shovelStone, 1), new Object[] {"C", "S", "S", 'C', Block.cobblestone, 'S', Item.stick}); 
-        ModLoader.addRecipe(new ItemStack(Item.pickaxeStone, 1), new Object[] {"CCC", " S ", " S ", 'C', Block.cobblestone, 'S', Item.stick}); 
-        ModLoader.addRecipe(new ItemStack(Item.axeStone, 1), new Object[] {"CC", "CS", " S", 'C', Block.cobblestone, 'S', Item.stick}); 
-        ModLoader.addRecipe(new ItemStack(Item.hoeStone, 1), new Object[] {"CC", " S", " S", 'C', Block.cobblestone, 'S', Item.stick}); 
+      removeRecipe(new ItemStack(spearFlint, 1), new Object[] {"F", "S", "S", 'F', Item.flint, 'S', Item.stick}); 
+      removeRecipe(new ItemStack(pickaxeFlint, 1), new Object[] {"FFF", " S ", " S ", 'F', Item.flint, 'S', Item.stick}); 
+      removeRecipe(new ItemStack(axeFlint, 1), new Object[] {"FF", "FS", " S", 'F', Item.flint, 'S', Item.stick}); 
+      removeRecipe(new ItemStack(hoeFlint, 1), new Object[] {"FF", " S", " S", 'F', Item.flint, 'S', Item.stick});
+    }
+    // Extended 2x2 Crafting
+	  if (optionsRecipes.getToggleValue("Extended 2x2 Crafting")) {
+      if (!extendedCrafting) {
+        extendedCrafting = true;
+        ModLoader.addRecipe(new ItemStack(Item.stick, 2), new Object[] {"#", "#", '#', Block.sapling}); 
+        ModLoader.addRecipe(new ItemStack(Item.stick, 2), new Object[] {"#", "#", '#', Block.cactus}); 
+        ModLoader.addRecipe(new ItemStack(Item.stick, 2), new Object[] {"/", "/", '/', Item.bone});
+        ModLoader.addRecipe(new ItemStack(Item.silk, 2), new Object[] {"#", '#', Block.cloth});
+        if (optionsRecipes.getToggleValue("Flint Tools")) {
+          ModLoader.addRecipe(new ItemStack(hatchetFlint, 1), new Object[] {"FS", "S ", 'F', Item.flint, 'S', Item.stick});
+        }
+    	  if (optionsRecipes.getToggleValue("Wood Axes")) {
+          ModLoader.addRecipe(new ItemStack(hatchetWood, 1), new Object[] {"WS", "S ", 'W', Block.planks, 'S', Item.stick}); 
+        } 
+    	  if (optionsRecipes.getToggleValue("Cobblestone Tools")) {
+          ModLoader.addRecipe(new ItemStack(hatchetStone, 1), new Object[] {"CS", "S ", 'C', Block.cobblestone, 'S', Item.stick}); 
+        } 
+        ModLoader.addRecipe(new ItemStack(hatchetIron, 1), new Object[] {"IS", "S ", 'I', Item.ingotIron, 'S', Item.stick}); 
+    	  if (optionsRecipes.getToggleValue("Diamond Tools")) {
+          ModLoader.addRecipe(new ItemStack(hatchetDiamond, 1), new Object[] {"DS", "S ", 'D', Item.diamond, 'S', Item.stick}); 
+        } 
+        ModLoader.addRecipe(new ItemStack(hatchetGold, 1), new Object[] {"GS", "S ", 'G', Item.ingotGold, 'S', Item.stick}); 
+        // Dagger (" #", "/ ", #=Material, /=stick)
+        // Sling ("#", "@", #=Leather, @=string)
+        // Sling stones? gravel -> stones?
+        // Trowel ("#", "/", #=Material, /=stick) Shovel/hoe
+        // Hand Pick ("##", "/ ", #=Material, /=stick)
+        // Campfire ("//", "//", /=stick)
+        // Bow Drill ("/@", "/#", /=stick, @=string, #=planks)
       }
+    } else if (extendedCrafting) {
+      extendedCrafting = false;
+      removeRecipe(new ItemStack(Item.stick, 1), new Object[] {"#", "#", '#', Block.sapling}); 
+      removeRecipe(new ItemStack(Item.stick, 2), new Object[] {"#", "#", '#', Block.cactus}); 
+      removeRecipe(new ItemStack(Item.stick, 2), new Object[] {"/", "/", '/', Item.bone});
+      removeRecipe(new ItemStack(Item.silk, 2), new Object[] {"#", '#', Block.cloth});
+      removeRecipe(new ItemStack(hatchetFlint, 1), new Object[] {"FS", "S ", 'F', Item.flint, 'S', Item.stick});
+      removeRecipe(new ItemStack(hatchetWood, 1), new Object[] {"WS", "S ", 'W', Block.planks, 'S', Item.stick}); 
+      removeRecipe(new ItemStack(hatchetStone, 1), new Object[] {"CS", "S ", 'C', Block.cobblestone, 'S', Item.stick}); 
+      removeRecipe(new ItemStack(hatchetIron, 1), new Object[] {"IS", "S ", 'I', Item.ingotIron, 'S', Item.stick}); 
+      removeRecipe(new ItemStack(hatchetDiamond, 1), new Object[] {"DS", "S ", 'D', Item.diamond, 'S', Item.stick}); 
+      removeRecipe(new ItemStack(hatchetGold, 1), new Object[] {"GS", "S ", 'G', Item.ingotGold, 'S', Item.stick}); 
     }
   }  
   
@@ -261,6 +438,23 @@ public class mod_MyWay extends BaseMod {
     boolean allowSquid = optionsPeacefulSpawns.getToggleValue("Squid") && allowPeaceful; 
     boolean allowNPCs = optionsPeacefulSpawns.getToggleValue("NPCs") && allowPeaceful;
       
+    // XP Orbs
+    if (!optionsSpecial.getToggleValue("XP")) {
+      for (int idx=0; idx<mc.theWorld.loadedEntityList.size(); idx++) {
+        Entity ent = (Entity)mc.theWorld.loadedEntityList.get(idx);
+        if ((ent!=null) && (ent instanceof EntityXPOrb)) {
+          ((EntityXPOrb)ent).setDead();
+        }
+      }
+      mc.thePlayer.experience = 0;
+      mc.thePlayer.experienceLevel = 0;
+      if (mc.thePlayer.worldObj.isRemote) {
+        for (int idx=0; idx<mc.getIntegratedServer().getConfigurationManager().playerEntityList.size(); idx++) {
+          ((EntityPlayerMP)mc.getIntegratedServer().getConfigurationManager().playerEntityList.get(idx)).experience = 0;
+          ((EntityPlayerMP)mc.getIntegratedServer().getConfigurationManager().playerEntityList.get(idx)).experienceLevel = 0;
+        }
+      }
+    }
     // Hostile & Peaceful Spawn overrides
     mc.theWorld.setAllowedSpawnTypes(allowHostile, allowPeaceful);
     if (!allowHostile) {
@@ -303,6 +497,10 @@ public class mod_MyWay extends BaseMod {
     if (!allowHostile && !allowPeaceful) {
       return;
     }
+    // Set peaceful mob adjustments
+    peacefulDropBones = optionsPeacefulSpawns.getToggleValue("Drop bones");
+    peacefulAdjustDrops = optionsPeacefulSpawns.getToggleValue("Adjust drops");
+    // Set peaceful mob spawns
     if (allowPeaceful) {
       if (allowBats) {
         ModLoader.addSpawn(EntityBat.class, 10, 8, 8, EnumCreatureType.ambient);
@@ -315,9 +513,10 @@ public class mod_MyWay extends BaseMod {
         killAll(EntityChicken.class, EnumCreatureType.creature);
       }
       if (allowCow) {
-        ModLoader.addSpawn(EntityCow.class, 8, 4, 4, EnumCreatureType.creature);
+        ModLoader.addSpawn(MMWEntityCow.class, 8, 4, 4, EnumCreatureType.creature);
       } else {
         killAll(EntityCow.class, EnumCreatureType.creature);
+        killAll(MMWEntityCow.class, EnumCreatureType.creature);
       }
       if (!allowIronGolem) {
         killAll(EntityIronGolem.class, EnumCreatureType.creature);
@@ -333,14 +532,16 @@ public class mod_MyWay extends BaseMod {
         killAll(EntityOcelot.class, EnumCreatureType.creature);
       }
       if (allowPig) {
-        ModLoader.addSpawn(EntityPig.class, 10, 4, 4, EnumCreatureType.creature);
+        ModLoader.addSpawn(MMWEntityPig.class, 10, 4, 4, EnumCreatureType.creature);
       } else {
         killAll(EntityPig.class, EnumCreatureType.creature);
+        killAll(MMWEntityPig.class, EnumCreatureType.creature);
       } 
       if (allowSheep) {
-        ModLoader.addSpawn(EntitySheep.class, 12, 4, 4, EnumCreatureType.creature);
+        ModLoader.addSpawn(MMWEntitySheep.class, 12, 4, 4, EnumCreatureType.creature);
       } else {
         killAll(EntitySheep.class, EnumCreatureType.creature);
+        killAll(MMWEntitySheep.class, EnumCreatureType.creature);
       }
       if (!allowSnowman) {
         killAll(EntitySnowman.class, EnumCreatureType.creature);
@@ -426,7 +627,7 @@ public class mod_MyWay extends BaseMod {
       }
     }
   }
-  
+
   public static void killAll(Class entityType, EnumCreatureType creatureType) {
     ModLoader.removeSpawn(entityType, creatureType);
     for (int idx=0; idx<mc.theWorld.loadedEntityList.size(); idx++) {
@@ -453,6 +654,148 @@ public class mod_MyWay extends BaseMod {
 			}
 		}
 	}
+
+  public static void removeRecipe(ItemStack par1ItemStack, Object ... par2ArrayOfObj) {
+    ShapedRecipes checkRecipe;
+		Iterator<?> itr = CraftingManager.getInstance().getRecipeList().iterator();
+
+    // Set recipe to check against
+    String recipeString = "";
+    int itemIndex = 0;
+    int width = 0;
+    int height = 0;
+    int numRows;
+    HashMap recipeTokens;
+
+    // Build recipe string
+    if (par2ArrayOfObj[itemIndex] instanceof String[]) {
+      String[] recipeRows = (String[])((String[])par2ArrayOfObj[itemIndex++]);
+      numRows = recipeRows.length;
+
+      for (int idx=0; idx<numRows; idx++) {
+        String row = recipeRows[idx];
+        height++;
+        width = row.length();
+        recipeString = recipeString + row;
+      }
+    } else {
+      while (par2ArrayOfObj[itemIndex] instanceof String) {
+        String row = (String)par2ArrayOfObj[itemIndex++];
+        height++;
+        width = row.length();
+        recipeString = recipeString + row;
+      }
+    }
+    // Build hash of token to replace in recipe string
+    for (recipeTokens = new HashMap(); itemIndex < par2ArrayOfObj.length; itemIndex += 2) {
+      Character token = (Character)par2ArrayOfObj[itemIndex];
+      ItemStack tokenItem = null;
+
+      if (par2ArrayOfObj[itemIndex + 1] instanceof Item) {
+        tokenItem = new ItemStack((Item)par2ArrayOfObj[itemIndex + 1]);
+      } else if (par2ArrayOfObj[itemIndex + 1] instanceof Block) {
+        tokenItem = new ItemStack((Block)par2ArrayOfObj[itemIndex + 1], 1, -1);
+      } else if (par2ArrayOfObj[itemIndex + 1] instanceof ItemStack) {
+        tokenItem = (ItemStack)par2ArrayOfObj[itemIndex + 1];
+      }
+      recipeTokens.put(token, tokenItem);
+    }
+    // Build recipe array of ItemStacks
+    ItemStack[] recipeStacks = new ItemStack[width * height];
+
+    for (int idx=0; idx<width * height; idx++) {
+      char token = recipeString.charAt(idx);
+      if (recipeTokens.containsKey(Character.valueOf(token))) {
+        recipeStacks[idx] = ((ItemStack)recipeTokens.get(Character.valueOf(token))).copy();
+      } else {
+        recipeStacks[idx] = null;
+      }
+    }
+    checkRecipe = new ShapedRecipes(width, height, recipeStacks, par1ItemStack);
+		// Look through list for recipe and remove if found
+		while (itr.hasNext()) {
+			Object o = itr.next();
+			if (o instanceof ShapedRecipes) {
+        if (recipesEqual((ShapedRecipes)o, checkRecipe)) {
+					itr.remove();
+        }
+			}
+		}
+  }
+
+  public static void removeShapelessRecipe(ItemStack par1ItemStack, Object ... par2ArrayOfObj) {
+    ShapelessRecipes checkRecipe;
+		Iterator<?> itr = CraftingManager.getInstance().getRecipeList().iterator();
+		
+    // Set recipe to check against
+    ArrayList recipeItems = new ArrayList();
+    Object[] items = par2ArrayOfObj;
+
+    for (int idx=0; idx<par2ArrayOfObj.length; idx++) {
+      if (items[idx] instanceof ItemStack) {
+        recipeItems.add(((ItemStack)items[idx]).copy());
+      } else if (items[idx] instanceof Item) {
+        recipeItems.add(new ItemStack((Item)items[idx]));
+      } else if (items[idx] instanceof Block) {
+        recipeItems.add(new ItemStack((Block)items[idx]));
+      }
+    }
+    checkRecipe = new ShapelessRecipes(par1ItemStack, recipeItems);
+		// Look through list for recipe and remove if found
+		while (itr.hasNext()) {
+			Object o = itr.next();
+			if (o instanceof ShapelessRecipes) {
+        if (recipesEqual((ShapelessRecipes)o, checkRecipe)) {
+					itr.remove();
+        }
+			}
+		}
+    
+  }
+
+  public static boolean recipesEqual(ShapedRecipes r1, ShapedRecipes r2) {
+    // Different output, quick exit
+    if (!ItemStack.areItemStacksEqual(r1.getRecipeOutput(), r2.getRecipeOutput())) {
+      return false;
+    }
+    try {
+      ItemStack[] recipe1Items = (ItemStack[])ModLoader.getPrivateValue(ShapedRecipes.class, r1, (isObfuscated) ? "d" : "recipeItems");
+      ItemStack[] recipe2Items = (ItemStack[])ModLoader.getPrivateValue(ShapedRecipes.class, r2, (isObfuscated) ? "d" : "recipeItems");
+      if (recipe1Items.length != recipe2Items.length) {
+        return false;
+      }
+      for (int idx=0; idx<recipe1Items.length; idx++) {
+        if (!ItemStack.areItemStacksEqual(recipe1Items[idx], recipe2Items[idx])) {
+          return false;
+        }
+      }
+    } catch (Exception error) {
+      return false;
+    }
+    return true;
+  }
+  
+  public static boolean recipesEqual(ShapelessRecipes r1, ShapelessRecipes r2) {
+    // Different output, quick exit
+    if (!ItemStack.areItemStacksEqual(r1.getRecipeOutput(), r2.getRecipeOutput())) {
+      return false;
+    }
+    try {
+      List recipe1Items = (List)ModLoader.getPrivateValue(ShapelessRecipes.class, r1, (isObfuscated) ? "b" : "recipeItems");
+      List recipe2Items = (List)ModLoader.getPrivateValue(ShapelessRecipes.class, r2, (isObfuscated) ? "b" : "recipeItems");
+      if (recipe1Items.size() != recipe2Items.size()) {
+        return false;
+      }
+      for (int idx=0; idx<recipe1Items.size(); idx++) {
+        if (!ItemStack.areItemStacksEqual((ItemStack)recipe1Items.get(idx), (ItemStack)recipe2Items.get(idx))) {
+          return false;
+        }
+      }
+    } catch (Exception error) {
+      return false;
+    }
+    return true;
+  }
 
   private void initModOptionsAPI() {
     // Create option screens
@@ -499,20 +842,30 @@ public class mod_MyWay extends BaseMod {
 	  optionsPeacefulSpawns.addToggle("Cow").setValue(true);
 	  optionsPeacefulSpawns.addToggle("Chicken").setValue(true);
 	  optionsPeacefulSpawns.addToggle("Bats").setValue(true);
+    optionsPeacefulSpawns.addToggle("Drop bones").setValue(false);
+    optionsPeacefulSpawns.addToggle("Adjust drops").setValue(false);
 	  optionsPeacefulSpawns.addToggle("Allow Peaceful Spawns").setValue(true);
     // Add options to Recipe screen
-	  optionsRecipes.addToggle("Flint Tools").setValue(false);
-	  optionsRecipes.addToggle("Craft Cobblestone").setValue(false);
-	  optionsRecipes.addToggle("Craft Flint").setValue(false);
-	  optionsRecipes.addToggle("Cobblestone Tools").setValue(true);
 	  optionsRecipes.addToggle("Wood Axes").setValue(true);
 	  optionsRecipes.addToggle("TNT").setValue(true);
-    optionsRecipes.addToggle("Diamond Tools").setValue(true);
+	  optionsRecipes.addToggle("Flint Tools").setValue(false);
+	  optionsRecipes.addToggle("Extended 2x2 Crafting").setValue(false);
 	  optionsRecipes.addToggle("Diamond Armor").setValue(true);
+	  optionsRecipes.addToggle("Craft Flint").setValue(false);
+	  optionsRecipes.addToggle("Craft Cobblestone").setValue(false);
+	  optionsRecipes.addToggle("Cobblestone Tools").setValue(true);
+    optionsRecipes.addToggle("Diamond Tools").setValue(true);
+    optionsRecipes.addTextOption("Base Item ID", "12120", 5).setWide(true);
     // Add options to Special screen
-	  optionsSpecial.addToggle("Gravel/Sand Gravity").setValue(true);
+	  optionsSpecial.addToggle("XP").setValue(true);
+    optionsSpecial.addMultiOption("Time Flow", new String[]{"Normal", "Always Day", "Always Night", "Rapid", "Slow", "Single Day"});
 	  optionsSpecial.addToggle("Stone Drops Gravel").setValue(false);
+    optionsSpecial.addToggle("Sprinting").setValue(true);
+    optionsSpecial.addToggle("Hunger").setValue(true);
+	  optionsSpecial.addToggle("Gravel/Sand Gravity").setValue(true);
+    optionsSpecial.addToggle("Exhaustion").setValue(true);
 	  optionsSpecial.addToggle("Bonemeal Instagrowth").setValue(true);
+    optionsSpecial.addToggle("Auto Healing").setValue(true);
     // Add options to World Gen screen
 	  optionsWorldGen.addToggle("Villages").setValue(true);
 	  optionsWorldGen.addToggle("Strongholds").setValue(true);

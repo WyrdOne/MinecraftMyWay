@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Minecraft My Way - Mod for Mincraft
 //    by Jonathan "Wyrd" Brazell
-//    Version: 0.5
-//    Minecraft Version: 1.4.2
+//    Version: 0.6
+//    Minecraft Version: 1.4.4
 ///////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////OVERVIEW///////////////////////////////////
@@ -21,6 +21,22 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////VERSION HISTORY///////////////////////////////
+// 0.6 - Updated to Minecraft 1.4.4 & MOAPI 1.0.0
+//     * Added option for cows, pigs & sheep to drop bones
+//     * Added option to increase drops from cows, pigs & sheep.
+//     * Added option for base item ID to allow items to be moved if conflicting
+//     * Added option to disable auto healing
+//     * Added option to disable hunger
+//     * Added option to disable sprinting
+//     * Added option to disable exhaustion
+//     * Added time flow options for always day, always night, rapid, slow, & single day
+//     * Added option for flint tools (uses stone tools images)
+//     * Added 2x2 crafting options for:
+//             2 saplings -> 2 sticks
+//             2 cactuses -> 2 sticks
+//             2 bones -> 2 sticks
+//             1 cloth -> 2 strings
+//             hatchets (top row material and stick, bottom row stick and empty)
 // 0.5 - Now kills any existing creatures of type not allowed to spawn.
 //      * Added option to kill Blazes
 //      * Added option to kill Cave Spiders
