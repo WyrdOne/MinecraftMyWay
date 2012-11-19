@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Minecraft My Way - Mod for Mincraft
 //    by Jonathan "Wyrd" Brazell
-//    Version: 0.6
+//    Version: 0.7
 //    Minecraft Version: 1.4.4
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -21,6 +21,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////VERSION HISTORY///////////////////////////////
+// 0.7 - Reorganized code to reduce lag
+//     * Fixed bug where sand/gravel did not drop
+//     * Updated HUD to eliminate unused xp or hunger indicators
+//     * Added options to allow blocks to be broken in Adventure mode
+//     * Added option to have Adventure mode as game type when creating world
+//     * Added option to make dirt drop when placed if not supported
+//     * Split sand/gravel gravity into two options
 // 0.6 - Updated to Minecraft 1.4.4 & MOAPI 1.0.0
 //     * Added option for cows, pigs & sheep to drop bones
 //     * Added option to increase drops from cows, pigs & sheep.

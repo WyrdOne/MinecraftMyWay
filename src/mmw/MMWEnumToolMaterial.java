@@ -1,7 +1,7 @@
 package net.minecraft.src;
 
 public enum MMWEnumToolMaterial {
-  FLINT(1, 131, 4.0F, 1, 5);
+  FLINT(1, 100, 3.0F, 1, 5);
   
   /**
   * The level of material this tool can harvest (3 = DIAMOND, 2 = IRON, 1 = STONE, 0 = IRON/GOLD)

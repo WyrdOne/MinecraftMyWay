@@ -55,20 +55,11 @@ public class MMWFoodStats extends FoodStats {
   }
 
   public void setFoodExhaustionLevel(float foodExhaustionLevel) {
-    try {
-      Field field = this.getClass().getSuperclass().getDeclaredField((mod_MyWay.isObfuscated) ? "c" : "foodExhaustionLevel");
-      field.setAccessible(true);
-      field.setFloat(this, foodExhaustionLevel);
-    } catch (Exception ignored) {}
+    MMWUtil.setPrivateValue(this.getClass().getSuperclass(), this, "foodExhaustionLevel", "c", foodExhaustionLevel); 
   }
 
   public float getFoodExhaustionLevel() {
-    float foodExhaustionLevel = 0.0F;
-    try {
-      Field field = this.getClass().getSuperclass().getDeclaredField((mod_MyWay.isObfuscated) ? "c" : "foodExhaustionLevel");
-      field.setAccessible(true);
-      foodExhaustionLevel = field.getFloat(this);
-    } catch (Exception ignored) {}
+    float foodExhaustionLevel = (Float)MMWUtil.getPrivateValue(this.getClass().getSuperclass(), this, "foodExhaustionLevel", "c"); 
     return foodExhaustionLevel;
   }
 }
