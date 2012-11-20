@@ -10,7 +10,7 @@ import moapi.api.*;
 public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
   // Copyright/license info
   private static final String Name = "Minecraft My Way";
-  private static final String Version = "0.7 (For use with Minecraft 1.4.4)";
+  private static final String Version = "0.71 (For use with Minecraft 1.4.4)";
 	private static final String Copyright = "All original code and images (C) 2011-2012, Jonathan \"Wyrd\" Brazell";
 	private static final String License = "This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.";
   // Options
@@ -530,6 +530,12 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
       
     // Hostile & Peaceful Spawn overrides
     mc.theWorld.setAllowedSpawnTypes(allowHostile, allowPeaceful);
+    IntegratedServer server = mc.getIntegratedServer();
+    if (server!=null) {
+      for (int idx=0;idx<server.worldServers.length;idx++) {
+        server.worldServers[idx].setAllowedSpawnTypes(allowHostile, allowPeaceful);
+      }    
+    }
     if (!allowHostile) {
       MMWUtil.killAll(EntityBlaze.class, EnumCreatureType.monster);
       MMWUtil.killAll(EntityCaveSpider.class, EnumCreatureType.monster);

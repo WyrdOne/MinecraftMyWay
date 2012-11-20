@@ -100,6 +100,17 @@ public class MMWUtil {
         ((EntityLiving)ent).setDead();
       }
     }
+    IntegratedServer server = mc.getIntegratedServer();
+    if (server!=null) {
+      for (int idx=0;idx<server.worldServers.length;idx++) {
+        for (int idx2=0; idx2<server.worldServers[idx].loadedEntityList.size(); idx2++) {
+          Entity ent = (Entity)server.worldServers[idx].loadedEntityList.get(idx2);
+          if ((ent!=null) && (entityType.isInstance(ent))) {
+            ((EntityLiving)ent).setDead();
+          }
+        }
+      }    
+    }
   }
   
 	public static void removeRecipe(int item) {

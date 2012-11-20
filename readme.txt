@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Minecraft My Way - Mod for Mincraft
 //    by Jonathan "Wyrd" Brazell
-//    Version: 0.7
+//    Version: 0.71
 //    Minecraft Version: 1.4.4
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -21,6 +21,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////VERSION HISTORY///////////////////////////////
+// 0.71 - Bug fix, monsters were spawning on the internal server, but not the
+//        client, making them invisible, but able to attack.
 // 0.7 - Reorganized code to reduce lag
 //     * Fixed bug where sand/gravel did not drop
 //     * Updated HUD to eliminate unused xp or hunger indicators
