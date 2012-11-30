@@ -8,7 +8,7 @@ public class MMWBlockDirt extends BlockDirt {
   }
   
   public void onBlockAdded(World par1World, int par2, int par3, int par4) {
-    if (!par1World.isRemote) {
+    if (!par1World.isRemote && gravityWorks) {
       this.tryToFall(par1World, par2, par3, par4);
     }
   }

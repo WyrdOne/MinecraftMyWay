@@ -93,11 +93,11 @@ public class MMWUtil {
     addSpawn(var0, var1, var2, var3, var4, standardBiomes);
   }
 
-  public static void killAll(Class entityType, EnumCreatureType creatureType) {
+  public static void killAll(Class entityType) {
     for (int idx=0; idx<mc.theWorld.loadedEntityList.size(); idx++) {
       Entity ent = (Entity)mc.theWorld.loadedEntityList.get(idx);
       if ((ent!=null) && (entityType.isInstance(ent))) {
-        ((EntityLiving)ent).setDead();
+        ent.setDead();
       }
     }
     IntegratedServer server = mc.getIntegratedServer();
@@ -106,7 +106,7 @@ public class MMWUtil {
         for (int idx2=0; idx2<server.worldServers[idx].loadedEntityList.size(); idx2++) {
           Entity ent = (Entity)server.worldServers[idx].loadedEntityList.get(idx2);
           if ((ent!=null) && (entityType.isInstance(ent))) {
-            ((EntityLiving)ent).setDead();
+            ent.setDead();
           }
         }
       }    

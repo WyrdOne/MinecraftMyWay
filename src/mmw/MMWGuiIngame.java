@@ -559,9 +559,9 @@ if (optHunger) {
      */
     private void renderBossHealth()
     {
-        if (BossStatus.bossName != null && BossStatus.field_82826_b > 0)
+        if (BossStatus.bossName != null && BossStatus.statusBarLenght > 0)
         {
-            --BossStatus.field_82826_b;
+            --BossStatus.statusBarLenght;
             FontRenderer var1 = this.mc.fontRenderer;
             ScaledResolution var2 = new ScaledResolution(this.mc.gameSettings, this.mc.displayWidth, this.mc.displayHeight);
             int var3 = var2.getScaledWidth();

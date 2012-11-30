@@ -10,7 +10,7 @@ import moapi.api.*;
 public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
   // Copyright/license info
   private static final String Name = "Minecraft My Way";
-  private static final String Version = "0.71 (For use with Minecraft 1.4.4)";
+  private static final String Version = "0.72 (For use with Minecraft 1.4.5)";
 	private static final String Copyright = "All original code and images (C) 2011-2012, Jonathan \"Wyrd\" Brazell";
 	private static final String License = "This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.";
   // Options
@@ -358,10 +358,6 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
         }
       }
     }
-    // Fatigue/Exhaustion
-    if (optionsSpecial.getToggleValue("Exhaustion")) {
-      mmwFoodStats.setFoodExhaustionLevel(0.0F);
-    }
     // Hunger
     mmwFoodStats.hunger = (mmwGuiIngame.optHunger = optionsSpecial.getToggleValue("Hunger"));
     // Healing
@@ -537,131 +533,131 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
       }    
     }
     if (!allowHostile) {
-      MMWUtil.killAll(EntityBlaze.class, EnumCreatureType.monster);
-      MMWUtil.killAll(EntityCaveSpider.class, EnumCreatureType.monster);
-      MMWUtil.killAll(EntityCreeper.class, EnumCreatureType.monster);
-      MMWUtil.killAll(EntityDragon.class, EnumCreatureType.monster);
-      MMWUtil.killAll(EntityEnderman.class, EnumCreatureType.monster);
-      MMWUtil.killAll(EntityGhast.class, EnumCreatureType.monster);
-      MMWUtil.killAll(EntityGiantZombie.class, EnumCreatureType.monster);
-      MMWUtil.killAll(EntityMagmaCube.class, EnumCreatureType.monster);
-      MMWUtil.killAll(EntityPigZombie.class, EnumCreatureType.monster);
-      MMWUtil.killAll(EntitySilverfish.class, EnumCreatureType.monster);
-      MMWUtil.killAll(EntitySkeleton.class, EnumCreatureType.monster);
-      MMWUtil.killAll(EntitySlime.class, EnumCreatureType.monster);
-      MMWUtil.killAll(EntitySpider.class, EnumCreatureType.monster);
-      MMWUtil.killAll(EntityWitch.class, EnumCreatureType.monster);
-      MMWUtil.killAll(EntityWither.class, EnumCreatureType.monster);
-      MMWUtil.killAll(EntityZombie.class, EnumCreatureType.monster);
+      MMWUtil.killAll(EntityBlaze.class);
+      MMWUtil.killAll(EntityCaveSpider.class);
+      MMWUtil.killAll(EntityCreeper.class);
+      MMWUtil.killAll(EntityDragon.class);
+      MMWUtil.killAll(EntityEnderman.class);
+      MMWUtil.killAll(EntityGhast.class);
+      MMWUtil.killAll(EntityGiantZombie.class);
+      MMWUtil.killAll(EntityMagmaCube.class);
+      MMWUtil.killAll(EntityPigZombie.class);
+      MMWUtil.killAll(EntitySilverfish.class);
+      MMWUtil.killAll(EntitySkeleton.class);
+      MMWUtil.killAll(EntitySlime.class);
+      MMWUtil.killAll(EntitySpider.class);
+      MMWUtil.killAll(EntityWitch.class);
+      MMWUtil.killAll(EntityWither.class);
+      MMWUtil.killAll(EntityZombie.class);
     }    
     if (!allowPeaceful) {
-      MMWUtil.killAll(EntityVillager.class, EnumCreatureType.creature); // Enum is a dummy value in this case.
-      MMWUtil.killAll(EntityBat.class, EnumCreatureType.ambient);
-      MMWUtil.killAll(EntityChicken.class, EnumCreatureType.creature);
-      MMWUtil.killAll(EntityCow.class, EnumCreatureType.creature);
-      MMWUtil.killAll(EntityIronGolem.class, EnumCreatureType.creature);
-      MMWUtil.killAll(EntityMooshroom.class, EnumCreatureType.creature);
-      MMWUtil.killAll(EntityOcelot.class, EnumCreatureType.creature);
-      MMWUtil.killAll(EntityPig.class, EnumCreatureType.creature);
-      MMWUtil.killAll(EntitySheep.class, EnumCreatureType.creature);
-      MMWUtil.killAll(EntitySnowman.class, EnumCreatureType.creature);
-      MMWUtil.killAll(EntityWolf.class, EnumCreatureType.creature);
-      MMWUtil.killAll(EntitySquid.class, EnumCreatureType.waterCreature);
+      MMWUtil.killAll(EntityVillager.class);
+      MMWUtil.killAll(EntityBat.class);
+      MMWUtil.killAll(EntityChicken.class);
+      MMWUtil.killAll(EntityCow.class);
+      MMWUtil.killAll(EntityIronGolem.class);
+      MMWUtil.killAll(EntityMooshroom.class);
+      MMWUtil.killAll(EntityOcelot.class);
+      MMWUtil.killAll(EntityPig.class);
+      MMWUtil.killAll(EntitySheep.class);
+      MMWUtil.killAll(EntitySnowman.class);
+      MMWUtil.killAll(EntityWolf.class);
+      MMWUtil.killAll(EntitySquid.class);
     }
     // NPCs
     mc.getIntegratedServer().setCanSpawnNPCs(optNPC.getValue());
     if (!optNPC.getValue()) { 
-      MMWUtil.killAll(EntityVillager.class, EnumCreatureType.creature); // Enum is a dummy value in this case.
+      MMWUtil.killAll(EntityVillager.class);
     }
     if (!allowHostile && !allowPeaceful) {
       return;
     }
     if (allowPeaceful) {
       if (!optBats.getValue()) {
-        MMWUtil.killAll(EntityBat.class, EnumCreatureType.ambient);
+        MMWUtil.killAll(EntityBat.class);
       }
       if (!optChicken.getValue()) {
-        MMWUtil.killAll(EntityChicken.class, EnumCreatureType.creature);
+        MMWUtil.killAll(EntityChicken.class);
       }
       if (!optCow.getValue()) {
-        MMWUtil.killAll(EntityCow.class, EnumCreatureType.creature);
-        MMWUtil.killAll(MMWEntityCow.class, EnumCreatureType.creature);
+        MMWUtil.killAll(EntityCow.class);
+        MMWUtil.killAll(MMWEntityCow.class);
       }
       if (!optIronGolem.getValue()) {
-        MMWUtil.killAll(EntityIronGolem.class, EnumCreatureType.creature);
+        MMWUtil.killAll(EntityIronGolem.class);
       }
       if (!optMooshroom.getValue()) {
-        MMWUtil.killAll(EntityMooshroom.class, EnumCreatureType.creature);
+        MMWUtil.killAll(EntityMooshroom.class);
       }
       if (!optOcelot.getValue()) {
-        MMWUtil.killAll(EntityOcelot.class, EnumCreatureType.creature);
+        MMWUtil.killAll(EntityOcelot.class);
       }
       if (!optPig.getValue()) {
-        MMWUtil.killAll(EntityPig.class, EnumCreatureType.creature);
-        MMWUtil.killAll(MMWEntityPig.class, EnumCreatureType.creature);
+        MMWUtil.killAll(EntityPig.class);
+        MMWUtil.killAll(MMWEntityPig.class);
       } 
       if (!optSheep.getValue()) {
-        MMWUtil.killAll(EntitySheep.class, EnumCreatureType.creature);
-        MMWUtil.killAll(MMWEntitySheep.class, EnumCreatureType.creature);
+        MMWUtil.killAll(EntitySheep.class);
+        MMWUtil.killAll(MMWEntitySheep.class);
       }
       if (!optSnowman.getValue()) {
-        MMWUtil.killAll(EntitySnowman.class, EnumCreatureType.creature);
+        MMWUtil.killAll(EntitySnowman.class);
       }
       if (!optWolf.getValue()) {
-        MMWUtil.killAll(EntityWolf.class, EnumCreatureType.creature);
+        MMWUtil.killAll(EntityWolf.class);
       }
       if (!optSquid.getValue()) {
-        MMWUtil.killAll(EntitySquid.class, EnumCreatureType.waterCreature);
+        MMWUtil.killAll(EntitySquid.class);
       }
     }
     if (allowHostile) {
       if (!optBlaze.getValue()) {
-        MMWUtil.killAll(EntityBlaze.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntityBlaze.class);
       }
       if (!optCaveSpider.getValue()) {
-        MMWUtil.killAll(EntityCaveSpider.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntityCaveSpider.class);
       }
       if (!optCreeper.getValue()) {
-        MMWUtil.killAll(EntityCreeper.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntityCreeper.class);
       }
       if (!optDragon.getValue()) {
-        MMWUtil.killAll(EntityDragon.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntityDragon.class);
       }
       if (!optEnderman.getValue()) {
-        MMWUtil.killAll(EntityEnderman.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntityEnderman.class);
       }
       if (!optGhast.getValue()) {
-        MMWUtil.killAll(EntityGhast.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntityGhast.class);
       }
       if (!optGiantZombie.getValue()) {
-        MMWUtil.killAll(EntityGiantZombie.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntityGiantZombie.class);
       }
       if (!optMagmaCube.getValue()) {
-        MMWUtil.killAll(EntityMagmaCube.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntityMagmaCube.class);
       }
       if (!optPigZombie.getValue()) {
-        MMWUtil.killAll(EntityPigZombie.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntityPigZombie.class);
       }
       if (!optSilverfish.getValue()) {
-        MMWUtil.killAll(EntitySilverfish.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntitySilverfish.class);
       }
       if (!optSkeleton.getValue()) {
-        MMWUtil.killAll(EntitySkeleton.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntitySkeleton.class);
       }
       if (!optSlime.getValue()) {
-        MMWUtil.killAll(EntitySlime.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntitySlime.class);
       }
       if (!optSpider.getValue()) {
-        MMWUtil.killAll(EntitySpider.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntitySpider.class);
       }
       if (!optWitch.getValue()) {
-        MMWUtil.killAll(EntityWitch.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntityWitch.class);
       }
       if (!optWither.getValue()) {
-        MMWUtil.killAll(EntityWither.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntityWither.class);
       }
       if (!optZombie.getValue()) {
-        MMWUtil.killAll(EntityZombie.class, EnumCreatureType.monster);
+        MMWUtil.killAll(EntityZombie.class);
       }
     }
   }
@@ -846,7 +842,6 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
 	  optionsSpecial.addToggle("Sand Gravity").setValue(true);
     optionsSpecial.addToggle("Hunger").setValue(true);
 	  optionsSpecial.addToggle("Gravel Gravity").setValue(true);
-    optionsSpecial.addToggle("Exhaustion").setValue(true);
 	  optionsSpecial.addToggle("Dirt Gravity").setValue(false);
 	  optionsSpecial.addToggle("Bonemeal Instagrowth").setValue(true);
     optionsSpecial.addToggle("Auto Healing").setValue(true);
