@@ -13,20 +13,20 @@ public class MMWModeButton extends GuiButton {
   public String getGameMode() {
     String gameMode = "survival";
     try {
-      gameMode = (String)MMWUtil.getPrivateValue(GuiCreateWorld.class, screen, "gameMode", "o");
+      gameMode = (String)MMWReflection.getPrivateValue(GuiCreateWorld.class, screen, "gameMode");
     } catch (Exception ignored) { }
     return gameMode;  
   }
 
   public void setGameMode(String gameMode) {
     try {
-      MMWUtil.setPrivateValue(GuiCreateWorld.class, screen, "gameMode", "o", gameMode);
+      MMWReflection.setPrivateValue(GuiCreateWorld.class, screen, "gameMode", gameMode);
     } catch (Exception ignored) { }
   }
 
   public void setHardcore(boolean hardcore) {
     try {
-      MMWUtil.setPrivateValue(GuiCreateWorld.class, screen, "isHardcore", "t", hardcore);
+      MMWReflection.setPrivateValue(GuiCreateWorld.class, screen, "isHardcore", hardcore);
     } catch (Exception ignored) { }
   }
   
@@ -41,9 +41,9 @@ public class MMWModeButton extends GuiButton {
   }
 
   public void updateButtonText() {
+    Method method = MMWReflection.getPrivateMethod(screen.getClass(), "updateButtonText");
+
     try {
-      Method method = screen.getClass().getDeclaredMethod((MMWUtil.isObfuscated()) ? "h" : "updateButtonText");
-      method.setAccessible(true);
       method.invoke(screen);
     } catch (Exception ignored) { }
   }

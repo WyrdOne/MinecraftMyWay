@@ -6,91 +6,17 @@ import net.minecraft.client.Minecraft;
 
 public class MMWUtil {
   private static Minecraft mc = Minecraft.getMinecraft();
-  private static boolean isObfuscated;
-  private static Method method_RegisterEntityID = null;
-  private static Properties translateTable;
-  private static BiomeGenBase[] standardBiomes;
-  private static CraftingManager craftingManager;
   
-  static {
-    isObfuscated = false;
-    try {
-      Class.forName("net.minecraft.src.MathHelper", false, MMWUtil.class.getClassLoader());
-    } catch (ClassNotFoundException e) {
-      isObfuscated = true;
-    }
-    try {
-      method_RegisterEntityID = EntityList.class.getDeclaredMethod((isObfuscated) ? "a" : "addMapping", Class.class, String.class, int.class);
-    } catch (Exception ignored) { }
-    standardBiomes = (BiomeGenBase[])((BiomeGenBase[])(new LinkedList()).toArray(new BiomeGenBase[0]));
-    craftingManager = CraftingManager.getInstance();
-  }
-
-  public static boolean isObfuscated() {
-    return isObfuscated;
-  }
-
-  public static Object getPrivateValue(Class cls, Object obj, String fieldName, String obfuscatedName) {
-    try {
-      Field field = cls.getDeclaredField((isObfuscated) ? obfuscatedName : fieldName);
-      field.setAccessible(true);
-      return field.get(obj);
-    } catch (Exception exception) {
-      return null;
-    }
-  }
-
-  public static boolean setPrivateValue(Class cls, Object obj, String fieldName, String obfuscatedName, Object value) {
-    try {
-      Field field = cls.getDeclaredField((isObfuscated) ? obfuscatedName : fieldName);
-      field.setAccessible(true);
-      field.set(obj, value);
-      return true;
-    } catch (Exception exception) {
-      return false;
-    }
-  }
-
   public static void removeSpawn(Class entityType, EnumCreatureType creatureType) {
-    for (int idx=0; idx<standardBiomes.length; idx++) {
-      List spawnList = standardBiomes[idx].getSpawnableList(creatureType);
-      if (spawnList!=null) {
-        Iterator itr = spawnList.iterator();
-        while (itr.hasNext()) {
-          SpawnListEntry entry = (SpawnListEntry)itr.next();
-          if (entry.entityClass == entityType) {
-            itr.remove();
-          }
-        }
-      }
-    }
+    ModLoader.removeSpawn(entityType, creatureType);
   }
 
   public static void addSpawn(Class entity, int weight, int min, int max, EnumCreatureType creatureType, BiomeGenBase[] biomes) {
-    for (int idx=0; idx<biomes.length; idx++) {
-      List spawnList = biomes[idx].getSpawnableList(creatureType);
-      if (spawnList!=null) {
-        boolean found = false;
-        Iterator itr = spawnList.iterator();
-        while (itr.hasNext()) {
-          SpawnListEntry entry = (SpawnListEntry)itr.next();
-          if (entry.entityClass==entity) {
-            entry.itemWeight = weight;
-            entry.minGroupCount = min;
-            entry.maxGroupCount = max;
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          spawnList.add(new SpawnListEntry(entity, weight, min, max));
-        }
-      }
-    }
+    ModLoader.addSpawn(entity, weight, min, max, creatureType, biomes);
   }
 
   public static void addSpawn(Class var0, int var1, int var2, int var3, EnumCreatureType var4) {
-    addSpawn(var0, var1, var2, var3, var4, standardBiomes);
+    ModLoader.addSpawn(var0, var1, var2, var3, var4);
   }
 
   public static void killAll(Class entityType) {
@@ -114,7 +40,7 @@ public class MMWUtil {
   }
   
 	public static void removeRecipe(int item) {
-		Iterator<?> itr = craftingManager.getRecipeList().iterator();
+    Iterator<?> itr = CraftingManager.getInstance().getRecipeList().iterator();
 		
 		while (itr.hasNext()) {
 			Object o = itr.next();
@@ -132,7 +58,7 @@ public class MMWUtil {
 
   public static void removeRecipe(ItemStack par1ItemStack, Object ... par2ArrayOfObj) {
     ShapedRecipes checkRecipe;
-		Iterator<?> itr = craftingManager.getRecipeList().iterator();
+    Iterator<?> itr = CraftingManager.getInstance().getRecipeList().iterator();
 
     // Set recipe to check against
     String recipeString = "";
@@ -200,7 +126,7 @@ public class MMWUtil {
 
   public static void removeShapelessRecipe(ItemStack par1ItemStack, Object ... par2ArrayOfObj) {
     ShapelessRecipes checkRecipe;
-		Iterator<?> itr = craftingManager.getRecipeList().iterator();
+    Iterator<?> itr = CraftingManager.getInstance().getRecipeList().iterator();
 		
     // Set recipe to check against
     ArrayList recipeItems = new ArrayList();
@@ -225,7 +151,6 @@ public class MMWUtil {
         }
 			}
 		}
-    
   }
 
   public static boolean recipesEqual(ShapedRecipes r1, ShapedRecipes r2) {
@@ -234,8 +159,8 @@ public class MMWUtil {
       return false;
     }
     try {
-      ItemStack[] recipe1Items = (ItemStack[])getPrivateValue(ShapedRecipes.class, r1, "recipeItems", "d");
-      ItemStack[] recipe2Items = (ItemStack[])getPrivateValue(ShapedRecipes.class, r2, "recipeItems", "d");
+      ItemStack[] recipe1Items = (ItemStack[])MMWReflection.getPrivateValue(ShapedRecipes.class, r1, "recipeItems");
+      ItemStack[] recipe2Items = (ItemStack[])MMWReflection.getPrivateValue(ShapedRecipes.class, r2, "recipeItems");
       if (recipe1Items.length != recipe2Items.length) {
         return false;
       }
@@ -256,8 +181,8 @@ public class MMWUtil {
       return false;
     }
     try {
-      List recipe1Items = (List)getPrivateValue(ShapelessRecipes.class, r1, "recipeItems", "b");
-      List recipe2Items = (List)getPrivateValue(ShapelessRecipes.class, r2, "recipeItems", "b");
+      List recipe1Items = (List)MMWReflection.getPrivateValue(ShapelessRecipes.class, r1, "Shapeless");
+      List recipe2Items = (List)MMWReflection.getPrivateValue(ShapelessRecipes.class, r2, "Shapeless");
       if (recipe1Items.size() != recipe2Items.size()) {
         return false;
       }
@@ -273,29 +198,19 @@ public class MMWUtil {
   }
 
   public static void addRecipe(ItemStack var0, Object ... var1) {
-    craftingManager.addRecipe(var0, var1);
+    ModLoader.addRecipe(var0, var1);
   }
 
   public static void addShapelessRecipe(ItemStack var0, Object ... var1) {
-    craftingManager.addShapelessRecipe(var0, var1);
+    ModLoader.addShapelessRecipe(var0, var1);
   }
 
   public static void registerEntityID(Class var0, String var1, int var2) {
-    try {
-      method_RegisterEntityID.invoke((Object)null, var0, var1, var2);
-    } catch (Exception ignored) { }
+    ModLoader.registerEntityID(var0, var1, var2);
   }
   
   public static void addLocalization(String key, String lang, String value) {
-    Properties translateTable; 
-
-    StringTranslate.getInstance().setLanguage(lang);
-    try {
-      translateTable = (Properties)getPrivateValue(StringTranslate.class, StringTranslate.getInstance(), "translateTable", "b");
-    } catch (Exception aborts) {
-      return;
-    }
-    translateTable.setProperty(key, value);
+    ModLoader.addLocalization(key, lang, value);
   }
 
   public static void addLocalization(String key, String value) {
@@ -310,7 +225,3 @@ public class MMWUtil {
     addLocalization(block.getBlockName()+".name", "en_US", value);
   }
 }
-
-
-
-

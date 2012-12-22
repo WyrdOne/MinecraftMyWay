@@ -9,7 +9,7 @@ public class MMWEntityPig extends EntityPig {
    * Returns the item ID for the item the mob drops on death.
    */
   protected int getDropItemId() {
-    return this.isBurning() ? Item.porkCooked.shiftedIndex : Item.porkRaw.shiftedIndex;
+    return this.isBurning() ? Item.porkCooked.itemID : Item.porkRaw.itemID;
   }
 
   /**
@@ -20,22 +20,22 @@ public class MMWEntityPig extends EntityPig {
 
     for (int var4 = 0; var4 < var3; ++var4) {
       if (this.isBurning()) {
-        this.dropItem(Item.porkCooked.shiftedIndex, 1);
+        this.dropItem(Item.porkCooked.itemID, 1);
       } else {
-        this.dropItem(Item.porkRaw.shiftedIndex, 1);
+        this.dropItem(Item.porkRaw.itemID, 1);
       }
     }
     if (this.getSaddled()) {
-      this.dropItem(Item.saddle.shiftedIndex, 1);
+      this.dropItem(Item.saddle.itemID, 1);
     }
     if (mod_MyWay.peacefulDropBones) {
-      this.dropItem(Item.bone.shiftedIndex, 1);
+      this.dropItem(Item.bone.itemID, 1);
     }
   }
 
   protected void dropRareDrop(int par1) {
     if (mod_MyWay.peacefulAdjustDrops) {
-      this.dropItem(Item.leather.shiftedIndex, 1);
+      this.dropItem(Item.leather.itemID, 1);
     }
   }
 }

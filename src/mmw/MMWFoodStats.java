@@ -9,13 +9,25 @@ public class MMWFoodStats extends FoodStats {
   private int foodTimer = 0;
 
   /** Options for Minecraft My Way */
-  public boolean hunger = true;
-  public boolean healing = true;
+  public EntityPlayer saveEntityPlayer;
+  public static boolean hunger = true;
+  public static boolean healing = true;
+
+  /**
+   * Eat some food.
+   */
+  public void addStats(ItemFood par1ItemFood) {
+    if (hunger)
+      addStats(par1ItemFood.getHealAmount(), par1ItemFood.getSaturationModifier());
+    else if (saveEntityPlayer!=null)
+      saveEntityPlayer.heal(par1ItemFood.getHealAmount());
+  }
 
   /**
    * Handles the food game logic.
    */
   public void onUpdate(EntityPlayer par1EntityPlayer) {
+    saveEntityPlayer = par1EntityPlayer;
     if (!hunger) {
       setFoodLevel(20);
       setFoodSaturationLevel(5.0F);
@@ -53,13 +65,19 @@ public class MMWFoodStats extends FoodStats {
   public int getPrevFoodLevel() {
     return this.prevFoodLevel;
   }
+  
+  public boolean needFood() {
+    if (!hunger && saveEntityPlayer!=null)
+      return (saveEntityPlayer.getHealth()<saveEntityPlayer.getMaxHealth());
+    return getFoodLevel() < 20;
+  }
 
   public void setFoodExhaustionLevel(float foodExhaustionLevel) {
-    MMWUtil.setPrivateValue(this.getClass().getSuperclass(), this, "foodExhaustionLevel", "c", foodExhaustionLevel); 
+    MMWReflection.setPrivateValue(this.getClass().getSuperclass(), this, "foodExhaustionLevel", foodExhaustionLevel); 
   }
 
   public float getFoodExhaustionLevel() {
-    float foodExhaustionLevel = (Float)MMWUtil.getPrivateValue(this.getClass().getSuperclass(), this, "foodExhaustionLevel", "c"); 
+    float foodExhaustionLevel = (Float)MMWReflection.getPrivateValue(this.getClass().getSuperclass(), this, "foodExhaustionLevel"); 
     return foodExhaustionLevel;
   }
 }

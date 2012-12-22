@@ -16,6 +16,6 @@ public class MMWBlockStone extends BlockStone {
     if (par3 > 3) {
       par3 = 3;
     }
-    return par2Random.nextInt(10 - par3 * 3) == 0 ? Item.flint.shiftedIndex : drop;
+    return par2Random.nextInt(10 - par3 * 3) == 0 ? Item.flint.itemID : drop;
   }
 }

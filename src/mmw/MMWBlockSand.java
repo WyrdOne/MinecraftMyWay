@@ -18,17 +18,7 @@ public class MMWBlockSand extends BlockSand {
   public void updateTick(World par1World, int par2, int par3, int par4, Random par5Random) {
     if (!par1World.isRemote && gravityWorks) {
       if (tryToFall==null) {
-        String methodName;
-        if (MMWUtil.isObfuscated()) {
-          methodName = "l"; // Update when version changes.
-        } else {
-          methodName = "tryToFall";
-        }
-        try {
-          tryToFall = Block.sand.getClass().getDeclaredMethod(methodName, World.class, int.class, int.class, int.class);
-        } catch (Exception ignored) {
-          return;
-        }
+        tryToFall = MMWReflection.getPrivateMethod(Block.sand.getClass(), "tryToFall", World.class, int.class, int.class, int.class);
       }          
       tryToFall.setAccessible(true);
       try {

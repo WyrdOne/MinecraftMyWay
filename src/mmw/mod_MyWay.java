@@ -10,7 +10,7 @@ import moapi.api.*;
 public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
   // Copyright/license info
   private static final String Name = "Minecraft My Way";
-  private static final String Version = "0.72 (For use with Minecraft 1.4.5)";
+  private static final String Version = "0.8 (For use with Minecraft 1.4.6)";
 	private static final String Copyright = "All original code and images (C) 2011-2012, Jonathan \"Wyrd\" Brazell";
 	private static final String License = "This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.";
   // Options
@@ -33,12 +33,16 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
 	private static boolean extendedCrafting = false;
 	private static boolean timeFlow = false;
   // World Generation Options
-  public static boolean genCaves = true;
-  public static boolean genStrongholds = true;
-  public static boolean genVillages = true;
-  public static boolean genMineshafts = true;
-  public static boolean genScatteredFeatures = true;
-  public static boolean genRavines = true;
+  public static int genCaves = 2; // 0=off, 1=rare, 2=normal, 3=common
+  public static int genDungeons = 2;
+  public static int genLakes = 2;
+  public static int genLargeCaves = 2;
+  public static int genLavaLakes = 2;
+  public static int genMineshafts = 2;
+  public static int genRavines = 2;
+  public static int genScatteredFeatures = 2;
+  public static int genStrongholds = 2;
+  public static int genVillages = 2;
   // Mob Spawns
   public static ModBooleanOption optBats;
   public static ModBooleanOption optChicken;
@@ -86,9 +90,9 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
   public static Item hatchetDiamond;
   public static Item hatchetGold;
   // Other variables
+  private static Minecraft mc = Minecraft.getMinecraft();
   private static MMWWorldType mmwWorldType = new MMWWorldType();
   private static MMWFoodStats mmwFoodStats = new MMWFoodStats();
-  private static Minecraft mc = Minecraft.getMinecraft();
   private static MMWGuiIngame mmwGuiIngame = new MMWGuiIngame(mc);
   private static Block mmwStone;
   private static Block mmwSand;
@@ -96,6 +100,7 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
   private static Block mmwDirt;
   private static Item saveItemDye = Item.dyePowder;
   private static int tickCounter = 0;
+  private static int guiTickCounter = 0;
   private static int baseItemID = 12120;
       	
   public void load() {
@@ -123,7 +128,7 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
     mmwDirt = (new MMWBlockDirt(3, 2)).setHardness(0.5F).setStepSound(Block.soundGravelFootstep).setBlockName("dirt");
 
     // Replace dye to allow bonemeal to be disabled.
-    Item.itemsList[Item.dyePowder.shiftedIndex] = null;
+    Item.itemsList[Item.dyePowder.itemID] = null;
     Item.dyePowder = (new MMWItemDye(95)).setIconCoord(14, 4).setItemName("dyePowder");
 
     // Remove spawns for vanilla mobs, add custom mob spawns to replace them
@@ -185,8 +190,9 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
 	  if (optionsRecipes.getToggleValue("Extended 2x2 Crafting")) {
       MMWUtil.addRecipe(new ItemStack(hatchetGold, 1), new Object[] {"GS", "S ", 'G', Item.ingotGold, 'S', Item.stick}); 
     } 
-     
+
     // Check for option changes every tick
+    ModLoader.setInGUIHook(this, true, false);
     ModLoader.setInGameHook(this, true, false);
   }
 
@@ -194,45 +200,55 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
     if (param!="selectWorld.moreWorldOptions") {
       return param;
     }
-    if (!optionsAdventureMode.getToggleValue("Allow on Creation")) {
-      return param;
-    }
-    GuiScreen screen = mc.currentScreen;
-    if (screen instanceof GuiCreateWorld) {
-      GuiButton buttonGameMode;
-      try {
-        buttonGameMode = (GuiButton)MMWUtil.getPrivateValue(GuiCreateWorld.class, screen, "buttonGameMode", "w");
-      } catch (Exception ignored) {
-        return param;
-      }
-      if (!(buttonGameMode instanceof MMWModeButton)) {
-        buttonGameMode = new MMWModeButton(screen);
+    if (optionsAdventureMode.getToggleValue("Allow on Creation")) {
+      GuiScreen screen = mc.currentScreen;
+      if (screen instanceof GuiCreateWorld) {
+        GuiButton buttonGameMode;
         try {
-          MMWUtil.setPrivateValue(GuiCreateWorld.class, screen, "buttonGameMode", "w", buttonGameMode);
-        } catch (Exception ignored) { }
-        screen.controlList.set(2, buttonGameMode);
+          buttonGameMode = (GuiButton)MMWReflection.getPrivateValue(GuiCreateWorld.class, screen, "buttonGameMode");
+        } catch (Exception ignored) {
+          return param;
+        }
+        if (!(buttonGameMode instanceof MMWModeButton)) {
+          buttonGameMode = new MMWModeButton(screen);
+          try {
+            MMWReflection.setPrivateValue(GuiCreateWorld.class, screen, "buttonGameMode", buttonGameMode);
+          } catch (Exception ignored) { }
+          screen.controlList.set(2, buttonGameMode);
+        }
       }
     }
     return param;
+  }
+
+  public boolean onTickInGUI(float ticks, Minecraft mc, GuiScreen screen) {
+    processWorldGen();
+    processHostileSpawns();
+    processPeacefulSpawns();
+    processAdventureMode();  
+    processSpecial();
+    processRecipes();
+    return true;
   }
 
   public boolean onTickInGame(float f, Minecraft paramMinecraft) {
     processTimeFlow();
     processXP();
     killCritters();
+    // Rain
+    WorldInfo worldInfo = MinecraftServer.getServer().worldServers[0].getWorldInfo();
+    if (optionsSpecial.getOptionValue("Rain")=="Always") {
+      worldInfo.setRainTime(1000);
+      worldInfo.setRaining(true);
+    } else if (optionsSpecial.getOptionValue("Rain")=="Never") {
+      worldInfo.setRainTime(1000);
+      worldInfo.setRaining(false);
+    }
     // HUD Hook
     mc.ingameGUI = mmwGuiIngame;
     if (mc.thePlayer!=null && !optionsSpecial.getToggleValue("Sprinting")) {
       mc.thePlayer.setSprinting(false);
     }
-    // Don't need to check other options every tick.
-    tickCounter++;
-    if ((tickCounter & 0x001f)!=0x0001)
-      return true;
-    processAdventureMode();  
-    processSpawns();
-    processSpecial();
-    processRecipes();
     return true;
   }
 
@@ -241,7 +257,8 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
       for (int idx=0; idx<MinecraftServer.getServer().worldServers.length; idx++) {
         long time = MinecraftServer.getServer().worldServers[idx].getWorldTime();
         if ((time%24000)>12000) {
-          time = (time / 24000) * 24000; 
+          time /= 24000;
+          time *= 24000;
           MinecraftServer.getServer().worldServers[idx].setWorldTime(time);
         }
       }
@@ -249,7 +266,8 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
       for (int idx=0; idx<MinecraftServer.getServer().worldServers.length; idx++) {
         long time = MinecraftServer.getServer().worldServers[idx].getWorldTime();
         if (((time%24000)<13800) || ((time%24000)>22200)) {
-          time = ((time / 24000) * 24000) + 13800; 
+          time /= 24000;
+          time *= 24000;
           MinecraftServer.getServer().worldServers[idx].setWorldTime(time);
         }
       }
@@ -271,7 +289,9 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
         long totaltime = MinecraftServer.getServer().worldServers[idx].worldInfo.getWorldTotalTime();
         long time = MinecraftServer.getServer().worldServers[idx].getWorldTime();
         if ((totaltime>13800) && (((time%24000)<13800) || ((time%24000)>22200))) {
-          time = ((time / 24000) * 24000) + 13800; 
+          time /= 24000;
+          time *= 24000;
+          time += 13800;
           MinecraftServer.getServer().worldServers[idx].setWorldTime(time);
         }
       }
@@ -282,41 +302,36 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
     if (optionsAdventureMode.getToggleValue("Hands break sand/gravel")) {
       Material.sand.func_85158_p();
     } else {
-      MMWUtil.setPrivateValue(Material.class, Material.sand, "field_85159_M", "M", Boolean.FALSE);
+      MMWReflection.setPrivateValue(Material.class, Material.sand, "field_85159_M", Boolean.FALSE);
     }
     if (optionsAdventureMode.getToggleValue("Hands break leaves")) {
       Material.leaves.func_85158_p();
     } else {
-      MMWUtil.setPrivateValue(Material.class, Material.leaves, "field_85159_M", "M", Boolean.FALSE);
+      MMWReflection.setPrivateValue(Material.class, Material.leaves, "field_85159_M", Boolean.FALSE);
     }
     if (optionsAdventureMode.getToggleValue("Hands break dirt")) {
       Material.ground.func_85158_p();
       Material.grass.func_85158_p();
     } else {
-      MMWUtil.setPrivateValue(Material.class, Material.ground, "field_85159_M", "M", Boolean.FALSE);
-      MMWUtil.setPrivateValue(Material.class, Material.grass, "field_85159_M", "M", Boolean.FALSE);
+      MMWReflection.setPrivateValue(Material.class, Material.ground, "field_85159_M", Boolean.FALSE);
+      MMWReflection.setPrivateValue(Material.class, Material.grass, "field_85159_M", Boolean.FALSE);
     }
     if (optionsAdventureMode.getToggleValue("Hands break clay")) {
       Material.clay.func_85158_p();
     } else {
-      MMWUtil.setPrivateValue(Material.class, Material.clay, "field_85159_M", "M", Boolean.FALSE);
+      MMWReflection.setPrivateValue(Material.class, Material.clay, "field_85159_M", Boolean.FALSE);
     }
     if (optionsAdventureMode.getToggleValue("Hands break cactus")) {
       Material.cactus.func_85158_p();
     } else {
-      MMWUtil.setPrivateValue(Material.class, Material.cactus, "field_85159_M", "M", Boolean.FALSE);
+      MMWReflection.setPrivateValue(Material.class, Material.cactus, "field_85159_M", Boolean.FALSE);
     }
   }
 
   public static void processXP() {
     mmwGuiIngame.optXP = optionsSpecial.getToggleValue("XP");
     if (!mmwGuiIngame.optXP) {
-      for (int idx=0; idx<mc.theWorld.loadedEntityList.size(); idx++) {
-        Entity ent = (Entity)mc.theWorld.loadedEntityList.get(idx);
-        if ((ent!=null) && (ent instanceof EntityXPOrb)) {
-          ((EntityXPOrb)ent).setDead();
-        }
-      }
+      MMWUtil.killAll(EntityXPOrb.class);
       mc.thePlayer.experience = 0;
       mc.thePlayer.experienceLevel = 0;
       if (mc.thePlayer.worldObj.isRemote) {
@@ -330,12 +345,48 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
 
   public static void processWorldGen() {
     // World Gen Options - Called from MMWChunkProvider
-    genCaves = optionsWorldGen.getToggleValue("Caves");
-    genMineshafts = optionsWorldGen.getToggleValue("Mineshafts");
-    genRavines = optionsWorldGen.getToggleValue("Ravines");
-    genScatteredFeatures = optionsWorldGen.getToggleValue("Scattered Features");
-    genStrongholds = optionsWorldGen.getToggleValue("Strongholds");
-    genVillages = optionsWorldGen.getToggleValue("Villages");
+    if (optionsWorldGen.getToggleValue("Biome - Desert"))
+      ModLoader.addBiome(BiomeGenBase.desert);
+    else
+      ModLoader.removeBiome(BiomeGenBase.desert);
+    if (optionsWorldGen.getToggleValue("Biome - Extreme Hills"))
+      ModLoader.addBiome(BiomeGenBase.extremeHills);
+    else
+      ModLoader.removeBiome(BiomeGenBase.extremeHills);
+    if (optionsWorldGen.getToggleValue("Biome - Forest"))
+      ModLoader.addBiome(BiomeGenBase.forest);
+    else
+      ModLoader.removeBiome(BiomeGenBase.forest);
+    if (optionsWorldGen.getToggleValue("Biome - Jungle"))
+      ModLoader.addBiome(BiomeGenBase.jungle);
+    else
+      ModLoader.removeBiome(BiomeGenBase.jungle);
+    if (optionsWorldGen.getToggleValue("Biome - Plains"))
+      ModLoader.addBiome(BiomeGenBase.plains);
+    else
+      ModLoader.removeBiome(BiomeGenBase.plains);
+    if (optionsWorldGen.getToggleValue("Biome - Swampland"))
+      ModLoader.addBiome(BiomeGenBase.swampland);
+    else
+      ModLoader.removeBiome(BiomeGenBase.swampland);
+    if (optionsWorldGen.getToggleValue("Biome - Taiga"))
+      ModLoader.addBiome(BiomeGenBase.taiga);
+    else
+      ModLoader.removeBiome(BiomeGenBase.taiga);
+    if (GenLayerBiome.biomeArray.length==0) {
+      ModLoader.addBiome(BiomeGenBase.plains);
+      optionsWorldGen.getOption("Biome - Plains").setValue(true);
+    }
+    genCaves = optionsWorldGen.getMappedValue("Caves");
+    genDungeons = optionsWorldGen.getMappedValue("Dungeons");
+    genLakes = optionsWorldGen.getMappedValue("Lakes");
+    genLargeCaves = optionsWorldGen.getMappedValue("Large Caves");
+    genLavaLakes = optionsWorldGen.getMappedValue("Lava Lakes");
+    genMineshafts = optionsWorldGen.getMappedValue("Mineshafts");
+    genRavines = optionsWorldGen.getMappedValue("Ravines");
+    genScatteredFeatures = optionsWorldGen.getMappedValue("Scattered Features");
+    genStrongholds = optionsWorldGen.getMappedValue("Strongholds");
+    genVillages = optionsWorldGen.getMappedValue("Villages");
   }
 
   public static void processSpecial() {
@@ -662,118 +713,117 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
     }
   }
   
-  public static void processSpawns() {
-    boolean allowHostile = optHostile.getValue();
+  public static void processPeacefulSpawns() {
     boolean allowPeaceful = optPeaceful.getValue(); 
       
-    if (!allowHostile && !allowPeaceful) {
-      return;
+    // Set peaceful mob adjustments
+    peacefulDropBones = optionsPeacefulSpawns.getToggleValue("Drop bones");
+    peacefulAdjustDrops = optionsPeacefulSpawns.getToggleValue("Adjust drops");
+    if (allowPeaceful && optBats.getValue()) {
+      MMWUtil.addSpawn(EntityBat.class, 10, 8, 8, EnumCreatureType.ambient);
+    } else {
+      MMWUtil.removeSpawn(EntityBat.class, EnumCreatureType.ambient);
     }
-    // Set peaceful mob spawns
-    if (allowPeaceful) {
-      // Set peaceful mob adjustments
-      peacefulDropBones = optionsPeacefulSpawns.getToggleValue("Drop bones");
-      peacefulAdjustDrops = optionsPeacefulSpawns.getToggleValue("Adjust drops");
-      if (optBats.getValue()) {
-        MMWUtil.addSpawn(EntityBat.class, 10, 8, 8, EnumCreatureType.ambient);
-      } else {
-        MMWUtil.removeSpawn(EntityBat.class, EnumCreatureType.ambient);
-      }
-      if (optChicken.getValue()) {
-        MMWUtil.addSpawn(EntityChicken.class, 10, 4, 4, EnumCreatureType.creature);
-      } else {
-        MMWUtil.removeSpawn(EntityChicken.class, EnumCreatureType.creature);
-      }
-      if (optCow.getValue()) {
-        MMWUtil.addSpawn(MMWEntityCow.class, 8, 4, 4, EnumCreatureType.creature);
-      } else {
-        MMWUtil.removeSpawn(EntityCow.class, EnumCreatureType.creature);
-        MMWUtil.removeSpawn(MMWEntityCow.class, EnumCreatureType.creature);
-      }
-      if (optMooshroom.getValue()) {
-        MMWUtil.addSpawn(EntityMooshroom.class, 8, 4, 8, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.mushroomIsland});
-      } else {
-        MMWUtil.removeSpawn(EntityMooshroom.class, EnumCreatureType.creature);
-      }
-      if (optOcelot.getValue()) {
-        MMWUtil.addSpawn(EntityOcelot.class, 2, 1, 1, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.jungle});
-      } else {
-        MMWUtil.removeSpawn(EntityOcelot.class, EnumCreatureType.creature);
-      }
-      if (optPig.getValue()) {
-        MMWUtil.addSpawn(MMWEntityPig.class, 10, 4, 4, EnumCreatureType.creature);
-      } else {
-        MMWUtil.removeSpawn(EntityPig.class, EnumCreatureType.creature);
-        MMWUtil.removeSpawn(MMWEntityPig.class, EnumCreatureType.creature);
-      } 
-      if (optSheep.getValue()) {
-        MMWUtil.addSpawn(MMWEntitySheep.class, 12, 4, 4, EnumCreatureType.creature);
-      } else {
-        MMWUtil.removeSpawn(EntitySheep.class, EnumCreatureType.creature);
-        MMWUtil.removeSpawn(MMWEntitySheep.class, EnumCreatureType.creature);
-      }
-      if (optWolf.getValue()) {
-        MMWUtil.addSpawn(EntityWolf.class, 5, 4, 4, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.forest});
-        MMWUtil.addSpawn(EntityWolf.class, 8, 4, 4, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.taiga});
-      } else {
-        MMWUtil.removeSpawn(EntityWolf.class, EnumCreatureType.creature);
-      }
-      if (optSquid.getValue()) {
-        MMWUtil.addSpawn(EntitySquid.class, 10, 4, 4, EnumCreatureType.waterCreature);
-      } else {
-        MMWUtil.removeSpawn(EntitySquid.class, EnumCreatureType.waterCreature);
-      }
+    if (allowPeaceful && optChicken.getValue()) {
+      MMWUtil.addSpawn(EntityChicken.class, 10, 4, 4, EnumCreatureType.creature);
+    } else {
+      MMWUtil.removeSpawn(EntityChicken.class, EnumCreatureType.creature);
     }
-    if (allowHostile) {
-      if (optCreeper.getValue()) {
-        MMWUtil.addSpawn(EntityCreeper.class, 10, 4, 4, EnumCreatureType.monster);
-      } else {
-        MMWUtil.removeSpawn(EntityCreeper.class, EnumCreatureType.monster);
-      }
-      if (optEnderman.getValue()) {
-        MMWUtil.addSpawn(EntityEnderman.class, 1, 1, 4, EnumCreatureType.monster);
-      } else {
-        MMWUtil.removeSpawn(EntityEnderman.class, EnumCreatureType.monster);
-      }
-      if (optGhast.getValue()) {
-        MMWUtil.addSpawn(EntityGhast.class, 50, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
-      } else {
-        MMWUtil.removeSpawn(EntityGhast.class, EnumCreatureType.monster);
-      }
-      if (optMagmaCube.getValue()) {
-        MMWUtil.addSpawn(EntityMagmaCube.class, 1, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
-      } else {
-        MMWUtil.removeSpawn(EntityMagmaCube.class, EnumCreatureType.monster);
-      }
-      if (optPigZombie.getValue()) {
-        MMWUtil.addSpawn(EntityPigZombie.class, 100, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
-      } else {
-        MMWUtil.removeSpawn(EntityPigZombie.class, EnumCreatureType.monster);
-      }
-      if (optSkeleton.getValue()) {
-        MMWUtil.addSpawn(EntitySkeleton.class, 10, 4, 4, EnumCreatureType.monster);
-      } else {
-        MMWUtil.removeSpawn(EntitySkeleton.class, EnumCreatureType.monster);
-      }
-      if (optSlime.getValue()) {
-        MMWUtil.addSpawn(EntitySlime.class, 10, 4, 4, EnumCreatureType.monster);
-      } else {
-        MMWUtil.removeSpawn(EntitySlime.class, EnumCreatureType.monster);
-      }
-      if (optSpider.getValue()) {
-        MMWUtil.addSpawn(EntitySpider.class, 10, 4, 4, EnumCreatureType.monster);
-      } else {
-        MMWUtil.removeSpawn(EntitySpider.class, EnumCreatureType.monster);
-      }
-      if (optZombie.getValue()) {
-        MMWUtil.addSpawn(EntityZombie.class, 10, 4, 4, EnumCreatureType.monster);
-      } else {
-        MMWUtil.removeSpawn(EntityZombie.class, EnumCreatureType.monster);
-      }
+    if (allowPeaceful && optCow.getValue()) {
+      MMWUtil.addSpawn(MMWEntityCow.class, 8, 4, 4, EnumCreatureType.creature);
+    } else {
+      MMWUtil.removeSpawn(EntityCow.class, EnumCreatureType.creature);
+      MMWUtil.removeSpawn(MMWEntityCow.class, EnumCreatureType.creature);
+    }
+    if (allowPeaceful && optMooshroom.getValue()) {
+      MMWUtil.addSpawn(EntityMooshroom.class, 8, 4, 8, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.mushroomIsland});
+    } else {
+      MMWUtil.removeSpawn(EntityMooshroom.class, EnumCreatureType.creature);
+    }
+    if (allowPeaceful && optOcelot.getValue()) {
+      MMWUtil.addSpawn(EntityOcelot.class, 2, 1, 1, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.jungle});
+    } else {
+      MMWUtil.removeSpawn(EntityOcelot.class, EnumCreatureType.creature);
+    }
+    if (allowPeaceful && optPig.getValue()) {
+      MMWUtil.addSpawn(MMWEntityPig.class, 10, 4, 4, EnumCreatureType.creature);
+    } else {
+      MMWUtil.removeSpawn(EntityPig.class, EnumCreatureType.creature);
+      MMWUtil.removeSpawn(MMWEntityPig.class, EnumCreatureType.creature);
+    } 
+    if (allowPeaceful && optSheep.getValue()) {
+      MMWUtil.addSpawn(MMWEntitySheep.class, 12, 4, 4, EnumCreatureType.creature);
+    } else {
+      MMWUtil.removeSpawn(EntitySheep.class, EnumCreatureType.creature);
+      MMWUtil.removeSpawn(MMWEntitySheep.class, EnumCreatureType.creature);
+    }
+    if (allowPeaceful && optWolf.getValue()) {
+      MMWUtil.addSpawn(EntityWolf.class, 5, 4, 4, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.forest});
+      MMWUtil.addSpawn(EntityWolf.class, 8, 4, 4, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.taiga});
+    } else {
+      MMWUtil.removeSpawn(EntityWolf.class, EnumCreatureType.creature);
+    }
+    if (allowPeaceful && optSquid.getValue()) {
+      MMWUtil.addSpawn(EntitySquid.class, 10, 4, 4, EnumCreatureType.waterCreature);
+    } else {
+      MMWUtil.removeSpawn(EntitySquid.class, EnumCreatureType.waterCreature);
+    }
+  }
+    
+  public static void processHostileSpawns() {
+    boolean allowHostile = optHostile.getValue();
+    
+    if (allowHostile && optCreeper.getValue()) {
+      MMWUtil.addSpawn(EntityCreeper.class, 10, 4, 4, EnumCreatureType.monster);
+    } else {
+      MMWUtil.removeSpawn(EntityCreeper.class, EnumCreatureType.monster);
+    }
+    if (allowHostile && optEnderman.getValue()) {
+      MMWUtil.addSpawn(EntityEnderman.class, 1, 1, 4, EnumCreatureType.monster);
+    } else {
+      MMWUtil.removeSpawn(EntityEnderman.class, EnumCreatureType.monster);
+    }
+    if (allowHostile && optGhast.getValue()) {
+      MMWUtil.addSpawn(EntityGhast.class, 50, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
+    } else {
+      MMWUtil.removeSpawn(EntityGhast.class, EnumCreatureType.monster);
+    }
+    if (allowHostile && optMagmaCube.getValue()) {
+      MMWUtil.addSpawn(EntityMagmaCube.class, 1, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
+    } else {
+      MMWUtil.removeSpawn(EntityMagmaCube.class, EnumCreatureType.monster);
+    }
+    if (allowHostile && optPigZombie.getValue()) {
+      MMWUtil.addSpawn(EntityPigZombie.class, 100, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
+    } else {
+      MMWUtil.removeSpawn(EntityPigZombie.class, EnumCreatureType.monster);
+    }
+    if (allowHostile && optSkeleton.getValue()) {
+      MMWUtil.addSpawn(EntitySkeleton.class, 10, 4, 4, EnumCreatureType.monster);
+    } else {
+      MMWUtil.removeSpawn(EntitySkeleton.class, EnumCreatureType.monster);
+    }
+    if (allowHostile && optSlime.getValue()) {
+      MMWUtil.addSpawn(EntitySlime.class, 10, 4, 4, EnumCreatureType.monster);
+    } else {
+      MMWUtil.removeSpawn(EntitySlime.class, EnumCreatureType.monster);
+    }
+    if (allowHostile && optSpider.getValue()) {
+      MMWUtil.addSpawn(EntitySpider.class, 10, 4, 4, EnumCreatureType.monster);
+    } else {
+      MMWUtil.removeSpawn(EntitySpider.class, EnumCreatureType.monster);
+    }
+    if (allowHostile && optZombie.getValue()) {
+      MMWUtil.addSpawn(EntityZombie.class, 10, 4, 4, EnumCreatureType.monster);
+    } else {
+      MMWUtil.removeSpawn(EntityZombie.class, EnumCreatureType.monster);
     }
   }
 
   private void initModOptionsAPI() {
+    String[] genOptions = new String[]{"Off", "Rare", "Normal", "Common"}; 
+    int[] genValues = {0, 1, 2, 3};
+  
     // Create option screens
     optionsMain = new ModOptions("Minecraft My Way");
     ModOptionsAPI.addMod(optionsMain);
@@ -840,18 +890,30 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
 	  optionsSpecial.addToggle("Stone Drops Gravel").setValue(false);
     optionsSpecial.addToggle("Sprinting").setValue(true);
 	  optionsSpecial.addToggle("Sand Gravity").setValue(true);
+	  optionsSpecial.addMultiOption("Rain", new String[]{"Normal", "Always", "Never"});
     optionsSpecial.addToggle("Hunger").setValue(true);
 	  optionsSpecial.addToggle("Gravel Gravity").setValue(true);
 	  optionsSpecial.addToggle("Dirt Gravity").setValue(false);
 	  optionsSpecial.addToggle("Bonemeal Instagrowth").setValue(true);
     optionsSpecial.addToggle("Auto Healing").setValue(true);
     // Add options to World Gen screen
-	  optionsWorldGen.addToggle("Villages").setValue(true);
-	  optionsWorldGen.addToggle("Strongholds").setValue(true);
-	  optionsWorldGen.addToggle("Scattered Features").setValue(true);
-	  optionsWorldGen.addToggle("Ravines").setValue(true);
-	  optionsWorldGen.addToggle("Mineshafts").setValue(true);
-	  optionsWorldGen.addToggle("Caves").setValue(true);
+    optionsWorldGen.addMappedOption("Villages", genValues, genOptions).setValue(2);
+    optionsWorldGen.addMappedOption("Strongholds", genValues, genOptions).setValue(2);
+    optionsWorldGen.addMappedOption("Scattered Features", genValues, genOptions).setValue(2);
+    optionsWorldGen.addMappedOption("Ravines", genValues, genOptions).setValue(2);
+    optionsWorldGen.addMappedOption("Mineshafts", genValues, genOptions).setValue(2);
+    optionsWorldGen.addMappedOption("Lava Lakes", genValues, genOptions).setValue(2);
+    optionsWorldGen.addMappedOption("Large Caves", genValues, genOptions).setValue(2);
+    optionsWorldGen.addMappedOption("Lakes", genValues, genOptions).setValue(2);
+    optionsWorldGen.addMappedOption("Dungeons", genValues, genOptions).setValue(2);
+    optionsWorldGen.addMappedOption("Caves", genValues, genOptions).setValue(2);
+    optionsWorldGen.addToggle("Biome - Taiga").setValue(true);
+    optionsWorldGen.addToggle("Biome - Swampland").setValue(true);
+    optionsWorldGen.addToggle("Biome - Plains").setValue(true);
+    optionsWorldGen.addToggle("Biome - Jungle").setValue(true);
+    optionsWorldGen.addToggle("Biome - Forest").setValue(true);
+    optionsWorldGen.addToggle("Biome - Extreme Hills").setValue(true);
+    optionsWorldGen.addToggle("Biome - Desert").setValue(true);
 	  // Add options to Adventure Mode screen
     optionsAdventureMode.addToggle("Hands break sand/gravel").setValue(false).setWide(true);
     optionsAdventureMode.addToggle("Hands break leaves").setValue(false);
@@ -863,6 +925,10 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
     optionsMain.loadValues();
     // Save current values
     optionsMain.save();
+  }
+
+  public String getPriorities() {
+    return "required-after:mod_moapi";
   }
 
   public String getName() {

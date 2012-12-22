@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Minecraft My Way - Mod for Mincraft
 //    by Jonathan "Wyrd" Brazell
-//    Version: 0.72
-//    Minecraft Version: 1.4.5
+//    Version: 0.8
+//    Minecraft Version: 1.4.6
 ///////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////OVERVIEW///////////////////////////////////
@@ -21,6 +21,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////VERSION HISTORY///////////////////////////////
+// 0.8 - Updated to Minecraft 1.4.6
+//     * Added option for rain
+//     * Added biome world gen options
+//     * Changed some world gen options from toggles to rarity/off
+//     * Eating food heals you if hunger is turned off
 // 0.72 - Bug fix.  Dirt gravity works right now.
 //     *  Hunger will work now, option for exhaustion removed for now.
 // 0.71 - Bug fix, monsters were spawning on the internal server, but not the

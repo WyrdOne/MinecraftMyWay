@@ -12,14 +12,7 @@ public class MMWStringTranslate extends StringTranslate {
   }
 
   public void setHook(MMWHookInterface<String> hook) {
-    Field field = null;
-    try {
-      field = parent.getClass().getDeclaredField("a");
-    } catch (Exception notobfuscated) {
-      try {field = parent.getClass().getDeclaredField("instance");} catch (Exception ignored) {}
-    }
-    field.setAccessible(true);
-    try {field.set(null, this);} catch (Exception ignored) {}
+    MMWReflection.setPrivateValue(parent.getClass(), parent, "instance", this);
     this.hook = hook;
   }
 

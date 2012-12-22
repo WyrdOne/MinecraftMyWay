@@ -19,23 +19,13 @@ public class MMWBlockGravel extends BlockSand {
     if (par3 > 3) {
       par3 = 3;
     }
-    return par2Random.nextInt(10 - par3 * 3) == 0 ? Item.flint.shiftedIndex : this.blockID;
+    return par2Random.nextInt(10 - par3 * 3) == 0 ? Item.flint.itemID : this.blockID;
   }
 
   public void updateTick(World par1World, int par2, int par3, int par4, Random par5Random) {
     if (!par1World.isRemote && gravityWorks) {
       if (tryToFall==null) {
-        String methodName;
-        if (MMWUtil.isObfuscated()) {
-          methodName = "l"; // Update when version changes.
-        } else {
-          methodName = "tryToFall";
-        }
-        try {
-          tryToFall = Block.sand.getClass().getDeclaredMethod(methodName, World.class, int.class, int.class, int.class);
-        } catch (Exception ignored) {
-          return;
-        }
+        tryToFall = MMWReflection.getPrivateMethod(Block.sand.getClass(), "tryToFall", World.class, int.class, int.class, int.class);
       }          
       tryToFall.setAccessible(true);
       try {

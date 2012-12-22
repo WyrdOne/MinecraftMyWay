@@ -32,7 +32,7 @@ public class MMWItemSpear extends Item {
         else
         {
             Material var3 = par2Block.blockMaterial;
-            return var3 != Material.plants && var3 != Material.vine && var3 != Material.field_76261_t && var3 != Material.leaves && var3 != Material.pumpkin ? 1.0F : 1.5F;
+            return var3 != Material.plants && var3 != Material.vine && var3 != Material.coral && var3 != Material.leaves && var3 != Material.pumpkin ? 1.0F : 1.5F;
         }
     }
 

@@ -9,7 +9,7 @@ public class MMWEntityCow extends EntityCow {
    * Returns the item ID for the item the mob drops on death.
    */
   protected int getDropItemId() {
-    return Item.leather.shiftedIndex;
+    return Item.leather.itemID;
   }
 
   /**
@@ -23,7 +23,7 @@ public class MMWEntityCow extends EntityCow {
       var3++;
     }
     for (var4 = 0; var4 < var3; ++var4) {
-      this.dropItem(Item.leather.shiftedIndex, 1);
+      this.dropItem(Item.leather.itemID, 1);
     }
 
     if (mod_MyWay.peacefulAdjustDrops) {
@@ -33,13 +33,13 @@ public class MMWEntityCow extends EntityCow {
     }
     for (var4 = 0; var4 < var3; ++var4) {
       if (this.isBurning()) {
-        this.dropItem(Item.beefCooked.shiftedIndex, 1);
+        this.dropItem(Item.beefCooked.itemID, 1);
       } else {
-        this.dropItem(Item.beefRaw.shiftedIndex, 1);
+        this.dropItem(Item.beefRaw.itemID, 1);
       }
     }
     if (mod_MyWay.peacefulDropBones) {
-      this.dropItem(Item.bone.shiftedIndex, 1);
+      this.dropItem(Item.bone.itemID, 1);
     }
   }
 }

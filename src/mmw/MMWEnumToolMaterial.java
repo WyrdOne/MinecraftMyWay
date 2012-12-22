@@ -72,6 +72,6 @@ public enum MMWEnumToolMaterial {
    * with an anvil
    */
   public int getToolCraftingMaterial() {
-    return ((this == FLINT) ? Item.flint.shiftedIndex : 0);
+    return ((this == FLINT) ? Item.flint.itemID : 0);
   }
 }

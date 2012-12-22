@@ -1,6 +1,7 @@
 package net.minecraft.src;
 
 import java.awt.Color;
+import java.lang.reflect.*;
 import java.util.List;
 import java.util.Random;
 import net.minecraft.client.Minecraft;
@@ -8,33 +9,69 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 public class MMWGuiIngame extends GuiIngame {
-  // MMW - HUD Options
   public static boolean optXP = true;
   public static boolean optHunger = true;
-  // MMW
-    private static final RenderItem itemRenderer = new RenderItem();
-    private final Random rand = new Random();
-    private final Minecraft mc;
+  private final Random rand = new Random();
+  private final Minecraft mc;
+  private final GuiNewChat persistantChatGUI;
+  private static Method method_renderBossHealth = null;
+  private static Method method_renderPumpkinBlur = null;
+  private static Method method_renderVignette = null;
+  private static Method method_renderPortalOverlay = null;
+  private static Method method_renderInventorySlot = null;
 
-    /** ChatGUI instance that retains all previous chat data */
-    private final GuiNewChat persistantChatGUI;
-    private int updateCounter = 0;
+  public MMWGuiIngame(Minecraft par1Minecraft) {
+    super(par1Minecraft);
+    persistantChatGUI = getChatGUI();
+    mc = par1Minecraft;
+    method_renderBossHealth = MMWReflection.getPrivateMethod(GuiIngame.class, "renderBossHealth");
+    method_renderPumpkinBlur = MMWReflection.getPrivateMethod(GuiIngame.class, "renderPumpkinBlur", int.class, int.class);
+    method_renderVignette = MMWReflection.getPrivateMethod(GuiIngame.class, "renderVignette", float.class, int.class, int.class);
+    method_renderPortalOverlay = MMWReflection.getPrivateMethod(GuiIngame.class, "renderPortalOverlay", float.class, int.class, int.class);
+    method_renderInventorySlot = MMWReflection.getPrivateMethod(GuiIngame.class, "renderInventorySlot", int.class, int.class, int.class, float.class);
+  }
+  
+  private void renderBossHealth() {
+    try {
+      method_renderBossHealth.invoke(this);
+    } catch (Exception ignored) { }
+  }
+  
+  private void renderPumpkinBlur(int par1, int par2) {
+    try {
+      method_renderPumpkinBlur.invoke(this, par1, par2);
+    } catch (Exception ignored) { }
+  }
 
-    /** The string specifying which record music is playing */
-    private String recordPlaying = "";
+  private void renderVignette(float par1, int par2, int par3) {
+    try {
+      method_renderVignette.invoke(this, par1, par2, par3);
+    } catch (Exception ignored) { }
+  }
 
-    /** How many ticks the record playing message will be displayed */
-    private int recordPlayingUpFor = 0;
-    private boolean recordIsPlaying = false;
+  private void renderPortalOverlay(float par1, int par2, int par3) {
+    try {
+      method_renderPortalOverlay.invoke(this, par1, par2, par3);
+    } catch (Exception ignored) { }
+  }
+  
+  private void renderInventorySlot(int par1, int par2, int par3, float par4) {
+    try {
+      method_renderInventorySlot.invoke(this, par1, par2, par3, par4);
+    } catch (Exception ignored) { }
+  }
 
-    /** Previous frame vignette brightness (slowly changes by 1% each frame) */
-    public float prevVignetteBrightness = 1.0F;
-
-    public MMWGuiIngame(Minecraft par1Minecraft) {
-/*MMW*/super(par1Minecraft);
-      this.mc = par1Minecraft;
-      this.persistantChatGUI = new GuiNewChat(par1Minecraft);
-    }
+  private String recordPlaying() {
+    return (String)MMWReflection.getPrivateValue(GuiIngame.class, this, "recordPlaying");
+  }
+  
+  private int recordPlayingUpFor() {
+    return ((Integer)MMWReflection.getPrivateValue(GuiIngame.class, this, "recordPlayingUpFor")).intValue();
+  }
+  
+  private boolean recordIsPlaying() {
+    return ((Boolean)MMWReflection.getPrivateValue(GuiIngame.class, this, "recordIsPlaying")).booleanValue();
+  }
 
     /**
      * Render the ingame overlay with quick icon bar, ...
@@ -108,7 +145,7 @@ public class MMWGuiIngame extends GuiIngame {
 
             var12 = this.mc.thePlayer.getHealth();
             var13 = this.mc.thePlayer.prevHealth;
-            this.rand.setSeed((long)(this.updateCounter * 312871));
+            this.rand.setSeed((long)(getUpdateCounter() * 312871));
             boolean var14 = false;
             FoodStats var15 = this.mc.thePlayer.getFoodStats();
             var16 = var15.getFoodLevel();
@@ -145,7 +182,7 @@ public class MMWGuiIngame extends GuiIngame {
 
                 if (this.mc.thePlayer.isPotionActive(Potion.regeneration))
                 {
-                    var24 = this.updateCounter % 25;
+                    var24 = getUpdateCounter() % 25;
                 }
 
                 this.mc.mcProfiler.endStartSection("healthArmor");
@@ -259,7 +296,7 @@ if (optHunger) {
                         var52 = 13;
                     }
 
-                    if (this.mc.thePlayer.getFoodStats().getSaturationLevel() <= 0.0F && this.updateCounter % (var16 * 3 + 1) == 0)
+                    if (this.mc.thePlayer.getFoodStats().getSaturationLevel() <= 0.0F && getUpdateCounter() % (var16 * 3 + 1) == 0)
                     {
                         var26 = var47 + (this.rand.nextInt(3) - 1);
                     }
@@ -434,10 +471,10 @@ if (optHunger) {
             this.mc.mcProfiler.endSection();
         }
 
-        if (this.recordPlayingUpFor > 0)
+        if (recordPlayingUpFor() > 0)
         {
             this.mc.mcProfiler.startSection("overlayMessage");
-            var33 = (float)this.recordPlayingUpFor - par1;
+            var33 = (float)recordPlayingUpFor() - par1;
             var12 = (int)(var33 * 256.0F / 20.0F);
 
             if (var12 > 255)
@@ -453,12 +490,12 @@ if (optHunger) {
                 GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
                 var13 = 16777215;
 
-                if (this.recordIsPlaying)
+                if (recordIsPlaying())
                 {
                     var13 = Color.HSBtoRGB(var33 / 50.0F, 0.7F, 0.6F) & 16777215;
                 }
 
-                var8.drawString(this.recordPlaying, -var8.getStringWidth(this.recordPlaying) / 2, -4, var13 + (var12 << 24));
+                var8.drawString(recordPlaying(), -var8.getStringWidth(recordPlaying()) / 2, -4, var13 + (var12 << 24));
                 GL11.glDisable(GL11.GL_BLEND);
                 GL11.glPopMatrix();
             }
@@ -472,7 +509,7 @@ if (optHunger) {
         GL11.glPushMatrix();
         GL11.glTranslatef(0.0F, (float)(var7 - 48), 0.0F);
         this.mc.mcProfiler.startSection("chat");
-        this.persistantChatGUI.drawChat(this.updateCounter);
+        this.persistantChatGUI.drawChat(getUpdateCounter());
         this.mc.mcProfiler.endSection();
         GL11.glPopMatrix();
 
@@ -552,191 +589,5 @@ if (optHunger) {
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         GL11.glDisable(GL11.GL_LIGHTING);
         GL11.glEnable(GL11.GL_ALPHA_TEST);
-    }
-
-    /**
-     * Renders dragon's (boss) health on the HUD
-     */
-    private void renderBossHealth()
-    {
-        if (BossStatus.bossName != null && BossStatus.statusBarLenght > 0)
-        {
-            --BossStatus.statusBarLenght;
-            FontRenderer var1 = this.mc.fontRenderer;
-            ScaledResolution var2 = new ScaledResolution(this.mc.gameSettings, this.mc.displayWidth, this.mc.displayHeight);
-            int var3 = var2.getScaledWidth();
-            short var4 = 182;
-            int var5 = var3 / 2 - var4 / 2;
-            int var6 = (int)(BossStatus.healthScale * (float)(var4 + 1));
-            byte var7 = 12;
-            this.drawTexturedModalRect(var5, var7, 0, 74, var4, 5);
-            this.drawTexturedModalRect(var5, var7, 0, 74, var4, 5);
-
-            if (var6 > 0)
-            {
-                this.drawTexturedModalRect(var5, var7, 0, 79, var6, 5);
-            }
-
-            String var8 = BossStatus.bossName;
-            var1.drawStringWithShadow(var8, var3 / 2 - var1.getStringWidth(var8) / 2, var7 - 10, 16777215);
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, this.mc.renderEngine.getTexture("/gui/icons.png"));
-        }
-    }
-
-    private void renderPumpkinBlur(int par1, int par2)
-    {
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        GL11.glDepthMask(false);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        GL11.glDisable(GL11.GL_ALPHA_TEST);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, this.mc.renderEngine.getTexture("%blur%/misc/pumpkinblur.png"));
-        Tessellator var3 = Tessellator.instance;
-        var3.startDrawingQuads();
-        var3.addVertexWithUV(0.0D, (double)par2, -90.0D, 0.0D, 1.0D);
-        var3.addVertexWithUV((double)par1, (double)par2, -90.0D, 1.0D, 1.0D);
-        var3.addVertexWithUV((double)par1, 0.0D, -90.0D, 1.0D, 0.0D);
-        var3.addVertexWithUV(0.0D, 0.0D, -90.0D, 0.0D, 0.0D);
-        var3.draw();
-        GL11.glDepthMask(true);
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glEnable(GL11.GL_ALPHA_TEST);
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-    }
-
-    /**
-     * Renders the vignette. Args: vignetteBrightness, width, height
-     */
-    private void renderVignette(float par1, int par2, int par3)
-    {
-        par1 = 1.0F - par1;
-
-        if (par1 < 0.0F)
-        {
-            par1 = 0.0F;
-        }
-
-        if (par1 > 1.0F)
-        {
-            par1 = 1.0F;
-        }
-
-        this.prevVignetteBrightness = (float)((double)this.prevVignetteBrightness + (double)(par1 - this.prevVignetteBrightness) * 0.01D);
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        GL11.glDepthMask(false);
-        GL11.glBlendFunc(GL11.GL_ZERO, GL11.GL_ONE_MINUS_SRC_COLOR);
-        GL11.glColor4f(this.prevVignetteBrightness, this.prevVignetteBrightness, this.prevVignetteBrightness, 1.0F);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, this.mc.renderEngine.getTexture("%blur%/misc/vignette.png"));
-        Tessellator var4 = Tessellator.instance;
-        var4.startDrawingQuads();
-        var4.addVertexWithUV(0.0D, (double)par3, -90.0D, 0.0D, 1.0D);
-        var4.addVertexWithUV((double)par2, (double)par3, -90.0D, 1.0D, 1.0D);
-        var4.addVertexWithUV((double)par2, 0.0D, -90.0D, 1.0D, 0.0D);
-        var4.addVertexWithUV(0.0D, 0.0D, -90.0D, 0.0D, 0.0D);
-        var4.draw();
-        GL11.glDepthMask(true);
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-    }
-
-    /**
-     * Renders the portal overlay. Args: portalStrength, width, height
-     */
-    private void renderPortalOverlay(float par1, int par2, int par3)
-    {
-        if (par1 < 1.0F)
-        {
-            par1 *= par1;
-            par1 *= par1;
-            par1 = par1 * 0.8F + 0.2F;
-        }
-
-        GL11.glDisable(GL11.GL_ALPHA_TEST);
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        GL11.glDepthMask(false);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, par1);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, this.mc.renderEngine.getTexture("/terrain.png"));
-        float var4 = (float)(Block.portal.blockIndexInTexture % 16) / 16.0F;
-        float var5 = (float)(Block.portal.blockIndexInTexture / 16) / 16.0F;
-        float var6 = (float)(Block.portal.blockIndexInTexture % 16 + 1) / 16.0F;
-        float var7 = (float)(Block.portal.blockIndexInTexture / 16 + 1) / 16.0F;
-        Tessellator var8 = Tessellator.instance;
-        var8.startDrawingQuads();
-        var8.addVertexWithUV(0.0D, (double)par3, -90.0D, (double)var4, (double)var7);
-        var8.addVertexWithUV((double)par2, (double)par3, -90.0D, (double)var6, (double)var7);
-        var8.addVertexWithUV((double)par2, 0.0D, -90.0D, (double)var6, (double)var5);
-        var8.addVertexWithUV(0.0D, 0.0D, -90.0D, (double)var4, (double)var5);
-        var8.draw();
-        GL11.glDepthMask(true);
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glEnable(GL11.GL_ALPHA_TEST);
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-    }
-
-    /**
-     * Renders the specified item of the inventory slot at the specified location. Args: slot, x, y, partialTick
-     */
-    private void renderInventorySlot(int par1, int par2, int par3, float par4)
-    {
-        ItemStack var5 = this.mc.thePlayer.inventory.mainInventory[par1];
-
-        if (var5 != null)
-        {
-            float var6 = (float)var5.animationsToGo - par4;
-
-            if (var6 > 0.0F)
-            {
-                GL11.glPushMatrix();
-                float var7 = 1.0F + var6 / 5.0F;
-                GL11.glTranslatef((float)(par2 + 8), (float)(par3 + 12), 0.0F);
-                GL11.glScalef(1.0F / var7, (var7 + 1.0F) / 2.0F, 1.0F);
-                GL11.glTranslatef((float)(-(par2 + 8)), (float)(-(par3 + 12)), 0.0F);
-            }
-
-            itemRenderer.renderItemAndEffectIntoGUI(this.mc.fontRenderer, this.mc.renderEngine, var5, par2, par3);
-
-            if (var6 > 0.0F)
-            {
-                GL11.glPopMatrix();
-            }
-
-            itemRenderer.renderItemOverlayIntoGUI(this.mc.fontRenderer, this.mc.renderEngine, var5, par2, par3);
-        }
-    }
-
-    /**
-     * The update tick for the ingame UI
-     */
-    public void updateTick()
-    {
-        if (this.recordPlayingUpFor > 0)
-        {
-            --this.recordPlayingUpFor;
-        }
-
-        ++this.updateCounter;
-    }
-
-    public void setRecordPlayingMessage(String par1Str)
-    {
-        this.recordPlaying = "Now playing: " + par1Str;
-        this.recordPlayingUpFor = 60;
-        this.recordIsPlaying = true;
-    }
-
-    /**
-     * returns a pointer to the persistant Chat GUI, containing all previous chat messages and such
-     */
-    public GuiNewChat getChatGUI()
-    {
-        return this.persistantChatGUI;
-    }
-
-    public int getUpdateCounter()
-    {
-        return this.updateCounter;
     }
 }
