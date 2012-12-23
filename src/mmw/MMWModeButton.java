@@ -6,7 +6,7 @@ public class MMWModeButton extends GuiButton {
   GuiCreateWorld screen;
 
   public MMWModeButton(GuiScreen screen) {
-    super(121, screen.width / 2 - 75, 115, 150, 20, StringTranslate.getInstance().translateKey("selectWorld.gameMode"));
+    super(121, screen.width / 2 - 75, 115, 150, 20, StringTranslate.getInstance().translateKey("selectWorld.gameMode") + " " + StringTranslate.getInstance().translateKey("selectWorld.gameMode.survival"));
     this.screen = (GuiCreateWorld)screen;
   }
 

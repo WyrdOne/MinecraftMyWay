@@ -13,7 +13,7 @@ public class MMWReflection {
   private static boolean isObfuscated;
   private static Properties obfuscation = new Properties() {{
     setProperty("addMapping", "a");
-    setProperty("buttonGameMode", "u");
+    setProperty("buttonGameMode", "w");
     setProperty("field_85159_M", "M");
     setProperty("foodExhaustionLevel", "c");
     setProperty("gameMode", "o");

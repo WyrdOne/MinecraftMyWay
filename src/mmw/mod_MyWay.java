@@ -7,10 +7,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.server.MinecraftServer;
 import moapi.api.*;
 
-public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
+public class mod_MyWay extends BaseMod {
   // Copyright/license info
   private static final String Name = "Minecraft My Way";
-  private static final String Version = "0.8 (For use with Minecraft 1.4.6)";
+  private static final String Version = "0.81 (For use with Minecraft 1.4.6)";
 	private static final String Copyright = "All original code and images (C) 2011-2012, Jonathan \"Wyrd\" Brazell";
 	private static final String License = "This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.";
   // Options
@@ -108,9 +108,6 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
     initModOptionsAPI();
     baseItemID = Integer.parseInt(optionsRecipes.getOptionValue("Base Item ID"));
 
-    // Enable StringTranslate hook for altering menus
-    (new MMWStringTranslate(StringTranslate.getInstance().getCurrentLanguage())).setHook(this);
-
     // Replace Stone
     Block.blocksList[Block.stone.blockID] = null;
     mmwStone = (new MMWBlockStone(1, 1)).setHardness(1.5F).setResistance(10.0F).setStepSound(Block.soundStoneFootstep).setBlockName("stone");
@@ -196,32 +193,22 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
     ModLoader.setInGameHook(this, true, false);
   }
 
-  public String StringTranslateHook(String param) {
-    if (param!="selectWorld.moreWorldOptions") {
-      return param;
-    }
-    if (optionsAdventureMode.getToggleValue("Allow on Creation")) {
-      GuiScreen screen = mc.currentScreen;
-      if (screen instanceof GuiCreateWorld) {
-        GuiButton buttonGameMode;
+  public boolean onTickInGUI(float ticks, Minecraft mc, GuiScreen screen) {
+    if (screen instanceof GuiCreateWorld && optionsAdventureMode.getToggleValue("Allow on Creation")) {
+      GuiButton buttonGameMode;
+      try {
+        buttonGameMode = (GuiButton)MMWReflection.getPrivateValue(GuiCreateWorld.class, screen, "buttonGameMode");
+      } catch (Exception ignored) {
+        buttonGameMode = null;
+      }
+      if (!(buttonGameMode instanceof MMWModeButton)) {
+        buttonGameMode = new MMWModeButton(screen);
         try {
-          buttonGameMode = (GuiButton)MMWReflection.getPrivateValue(GuiCreateWorld.class, screen, "buttonGameMode");
-        } catch (Exception ignored) {
-          return param;
-        }
-        if (!(buttonGameMode instanceof MMWModeButton)) {
-          buttonGameMode = new MMWModeButton(screen);
-          try {
-            MMWReflection.setPrivateValue(GuiCreateWorld.class, screen, "buttonGameMode", buttonGameMode);
-          } catch (Exception ignored) { }
-          screen.controlList.set(2, buttonGameMode);
-        }
+          MMWReflection.setPrivateValue(GuiCreateWorld.class, screen, "buttonGameMode", buttonGameMode);
+        } catch (Exception ignored) { }
+        screen.controlList.set(2, buttonGameMode);
       }
     }
-    return param;
-  }
-
-  public boolean onTickInGUI(float ticks, Minecraft mc, GuiScreen screen) {
     processWorldGen();
     processHostileSpawns();
     processPeacefulSpawns();
@@ -345,35 +332,44 @@ public class mod_MyWay extends BaseMod implements MMWHookInterface<String> {
 
   public static void processWorldGen() {
     // World Gen Options - Called from MMWChunkProvider
-    if (optionsWorldGen.getToggleValue("Biome - Desert"))
+    int forgeCompat = 0;
+    if (optionsWorldGen.getToggleValue("Biome - Desert")) {
       ModLoader.addBiome(BiomeGenBase.desert);
-    else
+      forgeCompat++;
+    } else
       ModLoader.removeBiome(BiomeGenBase.desert);
-    if (optionsWorldGen.getToggleValue("Biome - Extreme Hills"))
+    if (optionsWorldGen.getToggleValue("Biome - Extreme Hills")) {
       ModLoader.addBiome(BiomeGenBase.extremeHills);
-    else
+      forgeCompat++;
+    } else
       ModLoader.removeBiome(BiomeGenBase.extremeHills);
-    if (optionsWorldGen.getToggleValue("Biome - Forest"))
+    if (optionsWorldGen.getToggleValue("Biome - Forest")) {
       ModLoader.addBiome(BiomeGenBase.forest);
-    else
+      forgeCompat++;
+    } else
       ModLoader.removeBiome(BiomeGenBase.forest);
-    if (optionsWorldGen.getToggleValue("Biome - Jungle"))
+    if (optionsWorldGen.getToggleValue("Biome - Jungle")) {
       ModLoader.addBiome(BiomeGenBase.jungle);
-    else
+      forgeCompat++;
+    } else
       ModLoader.removeBiome(BiomeGenBase.jungle);
-    if (optionsWorldGen.getToggleValue("Biome - Plains"))
+    if (optionsWorldGen.getToggleValue("Biome - Plains")) {
       ModLoader.addBiome(BiomeGenBase.plains);
-    else
+      forgeCompat++;
+    } else
       ModLoader.removeBiome(BiomeGenBase.plains);
-    if (optionsWorldGen.getToggleValue("Biome - Swampland"))
+    if (optionsWorldGen.getToggleValue("Biome - Swampland")) {
       ModLoader.addBiome(BiomeGenBase.swampland);
-    else
+      forgeCompat++;
+    } else
       ModLoader.removeBiome(BiomeGenBase.swampland);
-    if (optionsWorldGen.getToggleValue("Biome - Taiga"))
+    if (optionsWorldGen.getToggleValue("Biome - Taiga")) {
       ModLoader.addBiome(BiomeGenBase.taiga);
-    else
+      forgeCompat++;
+    } else
       ModLoader.removeBiome(BiomeGenBase.taiga);
-    if (GenLayerBiome.biomeArray.length==0) {
+    //Originally -> if (GenLayerBiome.biomeArray.length==0) {
+    if (forgeCompat==0) {
       ModLoader.addBiome(BiomeGenBase.plains);
       optionsWorldGen.getOption("Biome - Plains").setValue(true);
     }

@@ -214,14 +214,14 @@ public class MMWUtil {
   }
 
   public static void addLocalization(String key, String value) {
-    addLocalization(key, "en_US", value);
+    ModLoader.addLocalization(key, value);
   }
   
   public static void addLocalization(Item item, String value) {
-    addLocalization(item.getItemName()+".name", "en_US", value);
+    ModLoader.addLocalization(item.getItemName()+".name", value);
   }
 
   public static void addLocalization(Block block, String value) {
-    addLocalization(block.getBlockName()+".name", "en_US", value);
+    ModLoader.addLocalization(block.getBlockName()+".name", value);
   }
 }
