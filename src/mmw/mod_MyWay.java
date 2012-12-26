@@ -10,7 +10,7 @@ import moapi.api.*;
 public class mod_MyWay extends BaseMod {
   // Copyright/license info
   private static final String Name = "Minecraft My Way";
-  private static final String Version = "0.81 (For use with Minecraft 1.4.6)";
+  private static final String Version = "0.82 (For use with Minecraft 1.4.6)";
 	private static final String Copyright = "All original code and images (C) 2011-2012, Jonathan \"Wyrd\" Brazell";
 	private static final String License = "This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.";
   // Options
@@ -45,35 +45,64 @@ public class mod_MyWay extends BaseMod {
   public static int genVillages = 2;
   // Mob Spawns
   public static ModBooleanOption optBats;
+  public static boolean enabledBats = true;
   public static ModBooleanOption optChicken;
+  public static boolean enabledChicken = true;
   public static ModBooleanOption optCow;
+  public static boolean enabledCow = true;
   public static ModBooleanOption optIronGolem;
+  public static boolean enabledIronGolem = true;
   public static ModBooleanOption optMooshroom;
+  public static boolean enabledMooshroom = true;
   public static ModBooleanOption optNPC;
+  public static boolean enabledNPC = true;
   public static ModBooleanOption optOcelot;
+  public static boolean enabledOcelot = true;
   public static ModBooleanOption optPeaceful;
+  public static boolean enabled = true;
   public static ModBooleanOption optPig;
+  public static boolean enabledPig = true;
   public static ModBooleanOption optSheep;
+  public static boolean enabledSheep = true;
   public static ModBooleanOption optSnowman;
+  public static boolean enabledSnowman = true;
   public static ModBooleanOption optSquid;
+  public static boolean enabledSquid = true;
   public static ModBooleanOption optWolf;
+  public static boolean enabledWolf = true;
 	public static ModBooleanOption optBlaze;
+  public static boolean enabledBlaze = true;
 	public static ModBooleanOption optCaveSpider;
+  public static boolean enabledCaveSpider = true;
 	public static ModBooleanOption optCreeper;
+  public static boolean enabledCreeper = true;
 	public static ModBooleanOption optDragon;
+  public static boolean enabledDragon = true;
 	public static ModBooleanOption optEnderman;
+  public static boolean enabledEnderman = true;
 	public static ModBooleanOption optGhast;
+  public static boolean enabledGhast = true;
 	public static ModBooleanOption optGiantZombie;
+  public static boolean enabledGiantZombie = true;
 	public static ModBooleanOption optHostile;
 	public static ModBooleanOption optMagmaCube;
+  public static boolean enabledMagmaCube = true;
 	public static ModBooleanOption optPigZombie;
+  public static boolean enabledPigZombie = true;
 	public static ModBooleanOption optSilverfish;
+  public static boolean enabledSilverfish = true;
 	public static ModBooleanOption optSkeleton;
+  public static boolean enabledSkeleton = true;
 	public static ModBooleanOption optSlime;
+  public static boolean enabledSlime = true;
 	public static ModBooleanOption optSpider;
+  public static boolean enabledSpider = true;
 	public static ModBooleanOption optWitch;
+  public static boolean enabledWitch = true;
 	public static ModBooleanOption optWither;
+  public static boolean enabledWither = true;
 	public static ModBooleanOption optZombie;
+  public static boolean enabledZombie = true;
   // Peaceful mob adjustments
   public static boolean peacefulDropBones = false;
   public static boolean peacefulAdjustDrops = false;
@@ -101,6 +130,7 @@ public class mod_MyWay extends BaseMod {
   private static Item saveItemDye = Item.dyePowder;
   private static int tickCounter = 0;
   private static int guiTickCounter = 0;
+  private static boolean firstTime = true;
   private static int baseItemID = 12120;
       	
   public void load() {
@@ -208,13 +238,15 @@ public class mod_MyWay extends BaseMod {
         } catch (Exception ignored) { }
         screen.controlList.set(2, buttonGameMode);
       }
+    } else if ((screen instanceof moapi.clientgui.ModMenu) || (screen instanceof GuiMainMenu && firstTime)) {
+      firstTime = false;
+      processWorldGen();
+      processHostileSpawns();
+      processPeacefulSpawns();
+      processAdventureMode();  
+      processSpecial();
+      processRecipes();
     }
-    processWorldGen();
-    processHostileSpawns();
-    processPeacefulSpawns();
-    processAdventureMode();  
-    processSpecial();
-    processRecipes();
     return true;
   }
 
@@ -715,53 +747,53 @@ public class mod_MyWay extends BaseMod {
     // Set peaceful mob adjustments
     peacefulDropBones = optionsPeacefulSpawns.getToggleValue("Drop bones");
     peacefulAdjustDrops = optionsPeacefulSpawns.getToggleValue("Adjust drops");
-    if (allowPeaceful && optBats.getValue()) {
+    if (allowPeaceful && !enabledBats && (enabledBats=optBats.getValue())) {
       MMWUtil.addSpawn(EntityBat.class, 10, 8, 8, EnumCreatureType.ambient);
-    } else {
+    } else if (enabledBats && !(enabledBats=optBats.getValue())) {
       MMWUtil.removeSpawn(EntityBat.class, EnumCreatureType.ambient);
     }
-    if (allowPeaceful && optChicken.getValue()) {
+    if (allowPeaceful && !enabledChicken && (enabledChicken=optChicken.getValue())) {
       MMWUtil.addSpawn(EntityChicken.class, 10, 4, 4, EnumCreatureType.creature);
-    } else {
+    } else if (enabledChicken && !(enabledChicken=optChicken.getValue())) {
       MMWUtil.removeSpawn(EntityChicken.class, EnumCreatureType.creature);
     }
-    if (allowPeaceful && optCow.getValue()) {
+    if (allowPeaceful && !enabledCow && (enabledCow=optCow.getValue())) {
       MMWUtil.addSpawn(MMWEntityCow.class, 8, 4, 4, EnumCreatureType.creature);
-    } else {
+    } else if (enabledCow && !(enabledCow=optCow.getValue())) {
       MMWUtil.removeSpawn(EntityCow.class, EnumCreatureType.creature);
       MMWUtil.removeSpawn(MMWEntityCow.class, EnumCreatureType.creature);
     }
-    if (allowPeaceful && optMooshroom.getValue()) {
+    if (allowPeaceful && !enabledMooshroom && (enabledMooshroom=optMooshroom.getValue())) {
       MMWUtil.addSpawn(EntityMooshroom.class, 8, 4, 8, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.mushroomIsland});
-    } else {
+    } else if (enabledMooshroom && !(enabledMooshroom=optMooshroom.getValue())) {
       MMWUtil.removeSpawn(EntityMooshroom.class, EnumCreatureType.creature);
     }
-    if (allowPeaceful && optOcelot.getValue()) {
+    if (allowPeaceful && !enabledOcelot && (enabledOcelot=optOcelot.getValue())) {
       MMWUtil.addSpawn(EntityOcelot.class, 2, 1, 1, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.jungle});
-    } else {
+    } else if (enabledOcelot && !(enabledOcelot=optOcelot.getValue())) {
       MMWUtil.removeSpawn(EntityOcelot.class, EnumCreatureType.creature);
     }
-    if (allowPeaceful && optPig.getValue()) {
+    if (allowPeaceful && !enabledPig && (enabledPig=optPig.getValue())) {
       MMWUtil.addSpawn(MMWEntityPig.class, 10, 4, 4, EnumCreatureType.creature);
-    } else {
+    } else if (enabledPig && !(enabledPig=optPig.getValue())) {
       MMWUtil.removeSpawn(EntityPig.class, EnumCreatureType.creature);
       MMWUtil.removeSpawn(MMWEntityPig.class, EnumCreatureType.creature);
     } 
-    if (allowPeaceful && optSheep.getValue()) {
+    if (allowPeaceful && !enabledSheep && (enabledSheep=optSheep.getValue())) {
       MMWUtil.addSpawn(MMWEntitySheep.class, 12, 4, 4, EnumCreatureType.creature);
-    } else {
+    } else if (enabledSheep && !(enabledSheep=optSheep.getValue())) {
       MMWUtil.removeSpawn(EntitySheep.class, EnumCreatureType.creature);
       MMWUtil.removeSpawn(MMWEntitySheep.class, EnumCreatureType.creature);
     }
-    if (allowPeaceful && optWolf.getValue()) {
+    if (allowPeaceful && !enabledWolf && (enabledWolf=optWolf.getValue())) {
       MMWUtil.addSpawn(EntityWolf.class, 5, 4, 4, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.forest});
       MMWUtil.addSpawn(EntityWolf.class, 8, 4, 4, EnumCreatureType.creature, new BiomeGenBase[] {BiomeGenBase.taiga});
-    } else {
+    } else if (enabledWolf && !(enabledWolf=optWolf.getValue())) {
       MMWUtil.removeSpawn(EntityWolf.class, EnumCreatureType.creature);
     }
-    if (allowPeaceful && optSquid.getValue()) {
+    if (allowPeaceful && !enabledSquid && (enabledSquid=optSquid.getValue())) {
       MMWUtil.addSpawn(EntitySquid.class, 10, 4, 4, EnumCreatureType.waterCreature);
-    } else {
+    } else if (enabledSquid && !(enabledSquid=optSquid.getValue())) {
       MMWUtil.removeSpawn(EntitySquid.class, EnumCreatureType.waterCreature);
     }
   }
@@ -769,49 +801,49 @@ public class mod_MyWay extends BaseMod {
   public static void processHostileSpawns() {
     boolean allowHostile = optHostile.getValue();
     
-    if (allowHostile && optCreeper.getValue()) {
+    if (allowHostile && !enabledCreeper && (enabledCreeper=optCreeper.getValue())) {
       MMWUtil.addSpawn(EntityCreeper.class, 10, 4, 4, EnumCreatureType.monster);
-    } else {
+    } else if (enabledCreeper && !(enabledCreeper=optCreeper.getValue())) {
       MMWUtil.removeSpawn(EntityCreeper.class, EnumCreatureType.monster);
     }
-    if (allowHostile && optEnderman.getValue()) {
+    if (allowHostile && !enabledEnderman && (enabledEnderman=optEnderman.getValue())) {
       MMWUtil.addSpawn(EntityEnderman.class, 1, 1, 4, EnumCreatureType.monster);
-    } else {
+    } else if (enabledEnderman && !(enabledEnderman=optEnderman.getValue())) {
       MMWUtil.removeSpawn(EntityEnderman.class, EnumCreatureType.monster);
     }
-    if (allowHostile && optGhast.getValue()) {
+    if (allowHostile && !enabledGhast && (enabledGhast=optGhast.getValue())) {
       MMWUtil.addSpawn(EntityGhast.class, 50, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
-    } else {
+    } else if (enabledGhast && !(enabledGhast=optGhast.getValue())) {
       MMWUtil.removeSpawn(EntityGhast.class, EnumCreatureType.monster);
     }
-    if (allowHostile && optMagmaCube.getValue()) {
+    if (allowHostile && !enabledMagmaCube && (enabledMagmaCube=optMagmaCube.getValue())) {
       MMWUtil.addSpawn(EntityMagmaCube.class, 1, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
-    } else {
+    } else if (enabledMagmaCube && !(enabledMagmaCube=optMagmaCube.getValue())) {
       MMWUtil.removeSpawn(EntityMagmaCube.class, EnumCreatureType.monster);
     }
-    if (allowHostile && optPigZombie.getValue()) {
+    if (allowHostile && !enabledPigZombie && (enabledPigZombie=optPigZombie.getValue())) {
       MMWUtil.addSpawn(EntityPigZombie.class, 100, 4, 4, EnumCreatureType.monster, new BiomeGenBase[] {BiomeGenBase.hell});
-    } else {
+    } else if (enabledPigZombie && !(enabledPigZombie=optPigZombie.getValue())) {
       MMWUtil.removeSpawn(EntityPigZombie.class, EnumCreatureType.monster);
     }
-    if (allowHostile && optSkeleton.getValue()) {
+    if (allowHostile && !enabledSkeleton && (enabledSkeleton=optSkeleton.getValue())) {
       MMWUtil.addSpawn(EntitySkeleton.class, 10, 4, 4, EnumCreatureType.monster);
-    } else {
+    } else if (enabledSkeleton && !(enabledSkeleton=optSkeleton.getValue())) {
       MMWUtil.removeSpawn(EntitySkeleton.class, EnumCreatureType.monster);
     }
-    if (allowHostile && optSlime.getValue()) {
+    if (allowHostile && !enabledSlime && (enabledSlime=optSlime.getValue())) {
       MMWUtil.addSpawn(EntitySlime.class, 10, 4, 4, EnumCreatureType.monster);
-    } else {
+    } else if (enabledSlime && !(enabledSlime=optSlime.getValue())) {
       MMWUtil.removeSpawn(EntitySlime.class, EnumCreatureType.monster);
     }
-    if (allowHostile && optSpider.getValue()) {
+    if (allowHostile && !enabledSpider && (enabledSpider=optSpider.getValue())) {
       MMWUtil.addSpawn(EntitySpider.class, 10, 4, 4, EnumCreatureType.monster);
-    } else {
+    } else if (enabledSpider && !(enabledSpider=optSpider.getValue())) {
       MMWUtil.removeSpawn(EntitySpider.class, EnumCreatureType.monster);
     }
-    if (allowHostile && optZombie.getValue()) {
+    if (allowHostile && !enabledZombie && (enabledZombie=optZombie.getValue())) {
       MMWUtil.addSpawn(EntityZombie.class, 10, 4, 4, EnumCreatureType.monster);
-    } else {
+    } else if (enabledZombie && !(enabledZombie=optZombie.getValue())) {
       MMWUtil.removeSpawn(EntityZombie.class, EnumCreatureType.monster);
     }
   }

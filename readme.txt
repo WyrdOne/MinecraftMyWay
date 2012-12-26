@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Minecraft My Way - Mod for Mincraft
+// Minecraft My Way - Mod for Minecraft
 //    by Jonathan "Wyrd" Brazell
-//    Version: 0.81
+//    Version: 0.82
 //    Minecraft Version: 1.4.6
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -21,6 +21,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////VERSION HISTORY///////////////////////////////
+// 0.82 - Adjusted spawn code to better deal with forge.
 // 0.81 - Fixed bug in string localization that made string appear odd
 //      * Added code to work around a forge/modloader compatibility issue
 // 0.8 - Updated to Minecraft 1.4.6
