@@ -1,8 +1,9 @@
-package net.minecraft.src;
+package mmw;
 
 import java.util.*;
 import java.lang.reflect.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.src.*;
 
 public class MMWUtil {
   private static Minecraft mc = Minecraft.getMinecraft();
@@ -218,10 +219,10 @@ public class MMWUtil {
   }
   
   public static void addLocalization(Item item, String value) {
-    ModLoader.addLocalization(item.getItemName()+".name", value);
+    ModLoader.addLocalization(item.getUnlocalizedName()+".name", value);
   }
 
   public static void addLocalization(Block block, String value) {
-    ModLoader.addLocalization(block.getBlockName()+".name", value);
+    ModLoader.addLocalization(block.getUnlocalizedName()+".name", value);
   }
 }

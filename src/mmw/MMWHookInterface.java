@@ -1,4 +1,4 @@
-package net.minecraft.src;
+package mmw;
 
 public interface MMWHookInterface<T> {
   T StringTranslateHook(T param);

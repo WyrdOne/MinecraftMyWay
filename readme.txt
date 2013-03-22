@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Minecraft My Way - Mod for Minecraft
 //    by Jonathan "Wyrd" Brazell
-//    Version: 0.82
-//    Minecraft Version: 1.4.6
+//    Version: 0.83
+//    Minecraft Version: 1.5
 ///////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////OVERVIEW///////////////////////////////////
@@ -21,6 +21,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////VERSION HISTORY///////////////////////////////
+// 0.83 - Updated to Minecraft 1.5
+//      * Hopefully fixed the lingering sand/gravel gravity bug
+//      * Added mod's version of sand, gravel, and dirt to shovel code
+//      * New tools actually have their own graphics now
 // 0.82 - Adjusted spawn code to better deal with forge.
 // 0.81 - Fixed bug in string localization that made string appear odd
 //      * Added code to work around a forge/modloader compatibility issue

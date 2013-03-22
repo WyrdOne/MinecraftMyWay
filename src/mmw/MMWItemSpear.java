@@ -1,4 +1,6 @@
-package net.minecraft.src;
+package mmw;
+
+import net.minecraft.src.*;
 
 public class MMWItemSpear extends Item {
     private int weaponDamage;
@@ -125,4 +127,8 @@ public class MMWItemSpear extends Item {
     {
         return this.toolMaterial.getToolCraftingMaterial() == par2ItemStack.itemID ? true : super.getIsRepairable(par1ItemStack, par2ItemStack);
     }
+    
+//    public void updateIcons(IconRegister par1IconRegister) {
+//        this.iconIndex = par1IconRegister.registerIcon(this.unlocalizedName);
+//    }
 }

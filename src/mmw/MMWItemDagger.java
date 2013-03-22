@@ -1,4 +1,6 @@
-package net.minecraft.src;
+package mmw;
+
+import net.minecraft.src.*;
 
 public class MMWItemDagger extends Item {
   private int weaponDamage;

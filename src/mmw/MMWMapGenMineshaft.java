@@ -1,8 +1,8 @@
-package net.minecraft.src;
+package mmw;
 
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
+import net.minecraft.src.*;
 
 public class MMWMapGenMineshaft extends MapGenMineshaft
 {

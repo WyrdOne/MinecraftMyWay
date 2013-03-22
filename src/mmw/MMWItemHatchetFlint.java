@@ -1,10 +1,12 @@
-package net.minecraft.src;
+package mmw;
+
+import net.minecraft.src.*;
 
 public class MMWItemHatchetFlint extends MMWItemTool {
   /** an array of the blocks this axe is effective against */
   private static Block[] blocksEffectiveAgainst = new Block[] {Block.planks, Block.bookShelf, Block.wood, Block.chest, Block.stoneDoubleSlab, Block.stoneSingleSlab, Block.pumpkin, Block.pumpkinLantern};
 
-  protected MMWItemHatchetFlint(int par1, MMWEnumToolMaterial par2EnumToolMaterial) {
+  public MMWItemHatchetFlint(int par1, MMWEnumToolMaterial par2EnumToolMaterial) {
     super(par1, 2, par2EnumToolMaterial, blocksEffectiveAgainst);
     this.setMaxDamage(par2EnumToolMaterial.getMaxUses() >> 1);
   }

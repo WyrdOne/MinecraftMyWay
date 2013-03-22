@@ -1,7 +1,10 @@
-package net.minecraft.src;
+package mmw;
+
+import net.minecraft.src.*;
 
 import java.util.*;
 import java.lang.reflect.*;
+
 import net.minecraft.client.Minecraft;
 
 /**
@@ -9,30 +12,21 @@ import net.minecraft.client.Minecraft;
 */
 
 public class MMWReflection {
-  private static Minecraft mc = Minecraft.getMinecraft();
   private static boolean isObfuscated;
   private static Properties obfuscation = new Properties() {{
-    setProperty("addMapping", "a");
-    setProperty("buttonGameMode", "w");
+    setProperty("blocksEffectiveAgainst", "c"); // field_77863_c
+    setProperty("buttonGameMode", "w"); // field_73930_u
+    setProperty("field_82665_g", "g");
+    setProperty("field_82671_h", "h");
     setProperty("field_85159_M", "M");
-    setProperty("foodExhaustionLevel", "c");
-    setProperty("gameMode", "o");
+    setProperty("foodExhaustionLevel", "c"); // field_75126_c 
+    setProperty("gameMode", "o"); // field_73927_m
     setProperty("instance", "a");
-    setProperty("isHardcore", "t");
-    setProperty("nameToSoundPoolEntriesMapping", "d");
-    setProperty("recipeItems", "d");
-    setProperty("recordIsPlaying", "i");
-    setProperty("recordPlaying", "g");
-    setProperty("recordPlayingUpFor", "h");
-    setProperty("renderBossHealth", "d");
-    setProperty("renderInventorySlot", "a");
-    setProperty("renderPortalOverlay", "b");
-    setProperty("renderPumpkinBlur", "a");
-    setProperty("renderVignette", "a");
-    setProperty("soundPoolSounds", "b");
-    setProperty("translateTable", "b");
-    setProperty("tryToFall", "l");
-    setProperty("updateButtonText", "h");
+    setProperty("isHardcore", "t"); // field_73933_r
+    setProperty("recipeItems", "d"); // field_77574_d
+    setProperty("structureCoords", "g"); // field_75057_g 
+    setProperty("tryToFall", "k"); // func_72190_l
+    setProperty("updateButtonText", "h"); // func_73914_h
   }};
   
   static {
@@ -61,6 +55,28 @@ public class MMWReflection {
     return fieldName;  
   }
 
+  public static Object getPrivateValue(Class cls, Object obj, Class fieldType, int count) {
+	  Field[] fields = cls.getDeclaredFields();
+	  Object returnObject = null;
+	  for (int idx=0; idx<fields.length; idx++) {
+		  if (fields[idx].getType()==fieldType) {
+			  if (count==0) {
+				  fields[idx].setAccessible(true);
+				  try {
+					  returnObject = fields[idx].get(obj);
+				  } catch (Exception ignored) {}
+				  break;
+			  }
+			  count--;
+		  }
+	  }
+	  return returnObject;
+  }
+  
+  public static Object getPrivateValue(Object obj, Class fieldType, int count) {
+    return getPrivateValue(obj.getClass(), obj, fieldType, count);
+  }
+  
   public static Object getPrivateValue(Class cls, Object obj, String fieldName) {
     try {
       Field field = cls.getDeclaredField(obfuscatedName(fieldName));
@@ -71,6 +87,28 @@ public class MMWReflection {
     }
   }
 
+  public static boolean setPrivateValue(Class cls, Object obj, Class fieldType, int count, Object value) {
+	  Field[] fields = cls.getDeclaredFields();
+	  for (int idx=0; idx<fields.length; idx++) {
+		  if (fields[idx].getType()==fieldType) {
+			  if (count==0) {
+				  fields[idx].setAccessible(true);
+				  try {
+					  fields[idx].set(obj, value);
+					  return true;
+				  } catch (Exception ignored) {}
+				  break;
+			  }
+			  count--;
+		  }
+	  }
+	  return false;
+  }
+
+  public static boolean setPrivateValue(Object obj, Class fieldType, int count, Object value) {
+    return setPrivateValue(obj.getClass(), obj, fieldType, count, value);
+  }
+  
   public static boolean setPrivateValue(Class cls, Object obj, String fieldName, Object value) {
     try {
       Field field = cls.getDeclaredField(obfuscatedName(fieldName));
@@ -91,5 +129,10 @@ public class MMWReflection {
       }
     }
     return getPrivateMethod(declaringClass.getSuperclass(), methodName, propertyType);
-  }  
+  }
+  
+  public static List getControlList(GuiScreen screen) {
+	  List controlList = (List)getPrivateValue(screen, List.class, 0);
+	  return controlList;  
+  }
 }

@@ -1,4 +1,6 @@
-package net.minecraft.src;
+package mmw;
+
+import net.minecraft.src.*;
 
 public class MMWItemTool extends Item {
   /** Array of blocks the tool has extra effect against. */

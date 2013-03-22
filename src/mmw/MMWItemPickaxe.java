@@ -1,10 +1,12 @@
-package net.minecraft.src;
+package mmw;
+
+import net.minecraft.src.*;
 
 public class MMWItemPickaxe extends MMWItemTool {
     /** an array of the blocks this pickaxe is effective against */
     private static Block[] blocksEffectiveAgainst = new Block[] {Block.cobblestone, Block.stoneDoubleSlab, Block.stoneSingleSlab, Block.stone, Block.sandStone, Block.cobblestoneMossy, Block.oreIron, Block.blockSteel, Block.oreCoal, Block.blockGold, Block.oreGold, Block.oreDiamond, Block.blockDiamond, Block.ice, Block.netherrack, Block.oreLapis, Block.blockLapis, Block.oreRedstone, Block.oreRedstoneGlowing, Block.rail, Block.railDetector, Block.railPowered};
 
-    protected MMWItemPickaxe(int par1, MMWEnumToolMaterial par2EnumToolMaterial)
+    public MMWItemPickaxe(int par1, MMWEnumToolMaterial par2EnumToolMaterial)
     {
         super(par1, 2, par2EnumToolMaterial, blocksEffectiveAgainst);
     }

@@ -1,4 +1,6 @@
-package net.minecraft.src;
+package mmw;
+
+import net.minecraft.src.*;
 
 public enum MMWEnumToolMaterial {
   FLINT(1, 100, 3.0F, 1, 5);

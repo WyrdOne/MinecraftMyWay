@@ -1,10 +1,12 @@
-package net.minecraft.src;
+package mmw;
+
+import net.minecraft.src.*;
 
 public class MMWItemAxe extends MMWItemTool {
   /** an array of the blocks this axe is effective against */
   private static Block[] blocksEffectiveAgainst = new Block[] {Block.planks, Block.bookShelf, Block.wood, Block.chest, Block.stoneDoubleSlab, Block.stoneSingleSlab, Block.pumpkin, Block.pumpkinLantern};
 
-  protected MMWItemAxe(int par1, MMWEnumToolMaterial par2EnumToolMaterial) {
+  public MMWItemAxe(int par1, MMWEnumToolMaterial par2EnumToolMaterial) {
     super(par1, 3, par2EnumToolMaterial, blocksEffectiveAgainst);
   }
 

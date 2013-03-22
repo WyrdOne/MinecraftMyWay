@@ -1,5 +1,6 @@
-package net.minecraft.src;
+package mmw;
 
+import net.minecraft.src.*;
 import java.util.Random;
 
 public class MMWItemDye extends ItemDye {

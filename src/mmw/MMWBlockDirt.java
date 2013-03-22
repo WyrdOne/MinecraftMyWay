@@ -1,10 +1,12 @@
-package net.minecraft.src;
+package mmw;
+
+import net.minecraft.src.*;
 
 public class MMWBlockDirt extends BlockDirt {
   public static boolean gravityWorks = false;
   
-  protected MMWBlockDirt(int par1, int par2) {
-    super(par1, par2);
+  public MMWBlockDirt(int par1) {
+    super(par1);
   }
   
   public void onBlockAdded(World par1World, int par2, int par3, int par4) {
@@ -25,12 +27,12 @@ public class MMWBlockDirt extends BlockDirt {
           par1World.spawnEntityInWorld(var9);
         }
       } else {
-        par1World.setBlockWithNotify(par2, par3, par4, 0);
+        par1World.setBlockToAir(par2, par3, par4);
         while (canFallBelow(par1World, par2, par3 - 1, par4) && par3 > 0) {
           --par3;
         }
         if (par3 > 0) {
-          par1World.setBlockWithNotify(par2, par3, par4, this.blockID);
+          par1World.setBlock(par2, par3, par4, this.blockID);
         }
       }
     }

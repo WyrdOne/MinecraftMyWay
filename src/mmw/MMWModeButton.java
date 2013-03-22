@@ -1,6 +1,7 @@
-package net.minecraft.src;
+package mmw;
 
 import java.lang.reflect.*;
+import net.minecraft.src.*;
 
 public class MMWModeButton extends GuiButton {
   GuiCreateWorld screen;
@@ -31,12 +32,12 @@ public class MMWModeButton extends GuiButton {
   }
   
   public void setAllowCommands(boolean enabled) {
-    GuiButton guiButton = (GuiButton)screen.controlList.get(7);
+    GuiButton guiButton = (GuiButton)MMWReflection.getControlList(screen).get(7);
     guiButton.enabled = enabled;  
   }
   
   public void setBonusItems(boolean enabled) {
-    GuiButton guiButton = (GuiButton)screen.controlList.get(5);
+    GuiButton guiButton = (GuiButton)MMWReflection.getControlList(screen).get(5);
     guiButton.enabled = enabled;  
   }
 

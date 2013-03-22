@@ -1,4 +1,6 @@
-package net.minecraft.src;
+package mmw;
+
+import net.minecraft.src.*;
 
 public class MMWEntityCow extends EntityCow {
   public MMWEntityCow(World par1World) {

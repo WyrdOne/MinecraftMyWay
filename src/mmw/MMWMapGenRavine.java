@@ -1,6 +1,7 @@
-package net.minecraft.src;
+package mmw;
 
 import java.util.Random;
+import net.minecraft.src.*;
 
 public class MMWMapGenRavine extends MapGenRavine
 {

@@ -1,4 +1,6 @@
-package net.minecraft.src;
+package mmw;
+
+import net.minecraft.src.*;
 
 public class MMWEntityPig extends EntityPig {
   public MMWEntityPig(World par1World) {

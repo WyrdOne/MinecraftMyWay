@@ -1,4 +1,6 @@
-package net.minecraft.src;
+package mmw;
+
+import net.minecraft.src.*;
 
 public class MMWItemHoe extends Item {
   protected MMWEnumToolMaterial theToolMaterial;
@@ -31,7 +33,7 @@ public class MMWItemHoe extends Item {
         if (par3World.isRemote) {
           return true;
         } else {
-          par3World.setBlockWithNotify(par4, par5, par6, var13.blockID);
+          par3World.setBlock(par4, par5, par6, var13.blockID);
           par1ItemStack.damageItem(1, par2EntityPlayer);
           return true;
         }
