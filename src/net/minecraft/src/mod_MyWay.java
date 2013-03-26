@@ -11,7 +11,7 @@ import mmw.*;
 public class mod_MyWay extends BaseMod {
 	// Copyright/license info
 	private static final String Name = "Minecraft My Way";
-	private static final String Version = "0.83 (For use with Minecraft 1.5)";
+	private static final String Version = "0.84 (For use with Minecraft 1.5.1)";
 	private static final String Copyright = "All original code and images (C) 2011-2013, Jonathan \"Wyrd\" Brazell";
 	private static final String License = "This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.";
 	// Options
